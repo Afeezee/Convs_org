@@ -33,7 +33,7 @@ function LayoutInner({ children, currentPageName }) {
   if (isLandingPage) {
     return (
       <div className="min-h-screen" style={{ background: "var(--convs-bg)" }}>
-        <header className="sticky top-0 z-40 border-b" style={{ background: "var(--convs-sidebar)", borderColor: "var(--convs-border)" }}>
+        <header className="sticky top-0 z-40 border-b backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)" }}>
           <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6992f6acbe5cb4f8025521fe/a8787b74f_Convs_Logo-removebg-preview.png" alt="Convs" className="w-8 h-8 object-contain" />
@@ -67,7 +67,7 @@ function LayoutInner({ children, currentPageName }) {
   return (
     <div className="min-h-screen" style={{ background: "var(--convs-bg)" }}>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-40 border-b" style={{ background: "var(--convs-sidebar)", borderColor: "var(--convs-border)" }}>
+      <header className="sticky top-0 z-40 border-b backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)" }}>
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           {/* Logo */}
           <Link to={createPageUrl("Home")} className="flex items-center gap-2.5">
@@ -173,7 +173,7 @@ function LayoutInner({ children, currentPageName }) {
       </main>
 
       {/* Mobile Bottom Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t flex" style={{ background: "var(--convs-sidebar)", borderColor: "var(--convs-border)" }}>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t flex backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)" }}>
         {navItems.map(item => {
           const isActive = currentPageName === item.page;
           return (
