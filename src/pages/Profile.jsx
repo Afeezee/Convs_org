@@ -7,7 +7,10 @@ import { Calendar, Users, MessageSquare, BarChart3, Bookmark, Settings, Loader2,
 import { Button } from "@/components/ui/button";
 import Avatar from "@/components/shared/Avatar";
 import ConvCard from "@/components/feed/ConvCard";
+import ReconvCard from "@/components/feed/ReconvCard";
 import CreateConvModal from "@/components/feed/CreateConvModal";
+import ShareModal from "@/components/feed/ShareModal";
+import ReconvModal from "@/components/feed/ReconvModal";
 import moment from "moment";
 
 export default function Profile() {
@@ -17,6 +20,9 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState("convs");
   const [isFollowing, setIsFollowing] = useState(false);
   const [showCreateConv, setShowCreateConv] = useState(false);
+  const [shareConv, setShareConv] = useState(null);
+  const [reconvConv, setReconvConv] = useState(null);
+  const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -47,6 +53,46 @@ export default function Profile() {
     queryFn: () => base44.entities.Bookmark.filter({ user_email: profileEmail }, "-created_date", 50),
     enabled: !!profileEmail && activeTab === "bookmarks",
   });
+
+  const { data: reconvs = [] } = useQuery({
+    queryKey: ["profile-reconvs", profileEmail],
+    queryFn: () => base44.entities.Reconv.filter({ user_email: profileEmail }, "-created_date", 50),
+    enabled: !!profileEmail,
+  });
+
+  // Fetch original convs for reconvs
+  const { data: allConvs = [] } = useQuery({
+    queryKey: ["all-convs-for-reconvs"],
+    queryFn: () => base44.entities.Conv.list("-created_date", 200),
+    enabled: reconvs.length > 0,
+  });
+
+  const convsById = React.useMemo(() => {
+    const map = {};
+    allConvs.forEach(c => { map[c.id] = c; });
+    convs.forEach(c => { map[c.id] = c; });
+    return map;
+  }, [allConvs, convs]);
+
+  // Load bookmarks for current user
+  useEffect(() => {
+    if (!currentUser) return;
+    base44.entities.Bookmark.filter({ user_email: currentUser.email }).then(bms => {
+      setBookmarkedIds(new Set(bms.map(b => b.conv_id)));
+    });
+  }, [currentUser]);
+
+  const handleBookmark = async (conv) => {
+    if (!currentUser) return;
+    if (bookmarkedIds.has(conv.id)) {
+      const bms = await base44.entities.Bookmark.filter({ user_email: currentUser.email, conv_id: conv.id });
+      if (bms[0]) await base44.entities.Bookmark.delete(bms[0].id);
+      setBookmarkedIds(prev => { const n = new Set(prev); n.delete(conv.id); return n; });
+    } else {
+      await base44.entities.Bookmark.create({ user_email: currentUser.email, conv_id: conv.id });
+      setBookmarkedIds(prev => new Set(prev).add(conv.id));
+    }
+  };
 
   useEffect(() => {
     if (!currentUser || !profileEmail) return;
@@ -80,7 +126,7 @@ export default function Profile() {
   const username = profileUser?.username || profileEmail?.split("@")[0];
 
   const tabs = [
-    { key: "convs", label: "Convs", count: convs.length },
+    { key: "convs", label: "Convs", count: convs.length + reconvs.length },
     { key: "replies", label: "Replies", count: null },
     { key: "analytics", label: "Analytics", count: null },
     { key: "bookmarks", label: "Bookmarks", count: null },
@@ -164,7 +210,7 @@ export default function Profile() {
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-3 mt-4">
           <div className="convs-card p-3 text-center">
-            <p className="text-lg font-bold text-[var(--convs-text)]">{convs.length}</p>
+            <p className="text-lg font-bold text-[var(--convs-text)]">{convs.length + reconvs.length}</p>
             <p className="text-[10px] text-[var(--convs-text-muted)] uppercase tracking-wider">Convs</p>
           </div>
           <div className="convs-card p-3 text-center">
@@ -212,7 +258,41 @@ export default function Profile() {
 
       {/* Content */}
       <div className="mt-4 space-y-3">
-        {activeTab === "convs" && convs.map(c => <ConvCard key={c.id} conv={c} />)}
+        {activeTab === "convs" && (() => {
+          // Merge convs and reconvs, sorted by date
+          const items = [
+            ...convs.map(c => ({ type: "conv", data: c, date: c.created_date })),
+            ...reconvs.map(r => ({ type: "reconv", data: r, date: r.created_date })),
+          ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+          return items.map(item => {
+            if (item.type === "reconv") {
+              const origConv = convsById[item.data.original_conv_id];
+              if (!origConv) return null;
+              return (
+                <ReconvCard
+                  key={`reconv-${item.data.id}`}
+                  reconv={item.data}
+                  originalConv={origConv}
+                  onBookmark={handleBookmark}
+                  isBookmarked={bookmarkedIds.has(origConv.id)}
+                  onShare={(c) => setShareConv(c)}
+                  onReconv={(c) => setReconvConv(c)}
+                />
+              );
+            }
+            return (
+              <ConvCard
+                key={item.data.id}
+                conv={item.data}
+                onBookmark={handleBookmark}
+                isBookmarked={bookmarkedIds.has(item.data.id)}
+                onShare={(c) => setShareConv(c)}
+                onReconv={(c) => setReconvConv(c)}
+              />
+            );
+          });
+        })()}
         {activeTab === "replies" && comments.map(c => (
           <div key={c.id} className="convs-card p-4">
             <p className="text-xs text-[var(--convs-text-muted)] mb-2">
@@ -243,6 +323,16 @@ export default function Profile() {
           onCreated={() => queryClient.invalidateQueries({ queryKey: ["profile-convs", profileEmail] })}
         />
       )}
+
+      <ShareModal isOpen={!!shareConv} onClose={() => setShareConv(null)} conv={shareConv} />
+
+      <ReconvModal
+        isOpen={!!reconvConv}
+        onClose={() => setReconvConv(null)}
+        conv={reconvConv}
+        user={currentUser}
+        onReconved={() => queryClient.invalidateQueries({ queryKey: ["profile-reconvs", profileEmail] })}
+      />
     </div>
   );
 }
