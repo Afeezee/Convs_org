@@ -36,10 +36,31 @@ export default function CommentForm({ convId, conv, user, highlightedText, onCom
 
     // Moderate
     const mod = await base44.integrations.Core.InvokeLLM({
-      prompt: `Moderate this debate comment: "${content}"
+      prompt: `You are a strict moderation AI for Convs, an intellectual debate platform. Analyze this comment carefully and enforce these rules strictly:
+
+BLOCK if ANY of:
+- Contains hate speech, slurs, or discriminatory language
+- Contains direct personal attacks, insults, or name-calling against individuals
+- Contains threats or harassment of any kind
+- Contains excessive profanity or vulgarity
+- Is spam, gibberish, or completely off-topic nonsense
+- Promotes violence or self-harm
+
+WARN if ANY of:
+- Uses mildly aggressive or dismissive tone
+- Makes ad hominem arguments (attacks the person instead of the argument)
+- Is low-effort or doesn't contribute meaningfully to the debate
+
+APPROVE if:
+- The comment engages with the argument constructively
+- Even if the commenter disagrees strongly, they do so respectfully
+
+Comment to moderate: "${content}"
 Stance: ${stance}
 ${flawTag ? `Flaw tag: ${flawTag}` : ""}
-Rate constructiveness 0-1, detect personal attacks, check if flaw tag matches content.`,
+${strengthTag ? `Strength tag: ${strengthTag}` : ""}
+
+Rate constructiveness 0-1 and provide clear feedback explaining your decision.`,
       response_json_schema: {
         type: "object",
         properties: {
@@ -53,9 +74,12 @@ Rate constructiveness 0-1, detect personal attacks, check if flaw tag matches co
     });
 
     if (mod.action === "block") {
-      setModerationMsg(mod.feedback);
+      setModerationFeedback(mod.feedback);
       setIsSubmitting(false);
       return;
+    }
+    if (mod.action === "warn") {
+      setModerationFeedback(mod.feedback);
     }
 
     await base44.entities.Comment.create({
