@@ -83,7 +83,7 @@ function LayoutInner({ children, currentPageName }) {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1 flex-wrap">
             {navItems.map(item => {
               const isActive = currentPageName === item.page;
               return (
