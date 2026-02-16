@@ -53,9 +53,9 @@ import Home from './pages/Home';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import Landing from './pages/Landing';
 import Messages from './pages/Messages';
 import FollowSuggestions from './pages/FollowSuggestions';
+import Landing from './pages/Landing';
 import __Layout from './Layout.jsx';
 
 
@@ -66,9 +66,9 @@ export const PAGES = {
     "Notifications": Notifications,
     "Profile": Profile,
     "Settings": Settings,
-    "Landing": Landing,
     "Messages": Messages,
     "FollowSuggestions": FollowSuggestions,
+    "Landing": Landing,
 }
 
 export const pagesConfig = {

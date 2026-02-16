@@ -156,7 +156,7 @@ export default function Landing() {
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button
-              onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
+              onClick={() => base44.auth.redirectToLogin()}
               size="lg"
               className="bg-[var(--convs-accent)] hover:bg-[var(--convs-accent-hover)] text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
             >
@@ -164,7 +164,7 @@ export default function Landing() {
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button
-              onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
+              onClick={() => base44.auth.redirectToLogin()}
               variant="outline"
               size="lg"
               className="border-2 border-[var(--convs-border)] hover:border-[var(--convs-accent)] text-[var(--convs-text)] px-8 py-6 text-lg font-semibold rounded-xl transition-all"
@@ -310,7 +310,7 @@ export default function Landing() {
               Where structure beats noise. Where reasoning matters.
             </p>
             <Button
-              onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
+              onClick={() => base44.auth.redirectToLogin()}
               size="lg"
               className="bg-[var(--convs-accent)] hover:bg-[var(--convs-accent-hover)] text-white px-10 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
             >
