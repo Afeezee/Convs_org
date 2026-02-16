@@ -213,6 +213,7 @@ export default function ConvDetail() {
               <h3 className="font-semibold text-sm text-[var(--convs-text)] mb-3">Add your argument</h3>
               <CommentForm
                 convId={convId}
+                conv={conv}
                 user={user}
                 highlightedText={highlightedText}
                 onCommented={handleCommented}
