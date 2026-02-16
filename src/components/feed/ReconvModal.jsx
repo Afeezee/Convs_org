@@ -28,7 +28,7 @@ export default function ReconvModal({ isOpen, onClose, conv, user, onReconved })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={onClose}>
       <div
         className="w-full max-w-lg rounded-2xl p-5"
         style={{ background: "var(--convs-card)", border: "1px solid var(--convs-border)" }}

@@ -34,7 +34,7 @@ export default function ShareModal({ isOpen, onClose, conv }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4" onClick={onClose}>
       <div
         className="w-full max-w-sm rounded-2xl p-5"
         style={{ background: "var(--convs-card)", border: "1px solid var(--convs-border)" }}
