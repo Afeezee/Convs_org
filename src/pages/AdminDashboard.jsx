@@ -13,6 +13,7 @@ import Avatar from "@/components/shared/Avatar";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminContent from "@/components/admin/AdminContent";
+import AdminReports from "@/components/admin/AdminReports";
 import moment from "moment";
 
 export default function AdminDashboard() {
@@ -76,6 +77,7 @@ export default function AdminDashboard() {
     { key: "overview", label: "Overview", icon: BarChart3 },
     { key: "users", label: "Users", icon: Users },
     { key: "content", label: "Content", icon: FileText },
+    { key: "reports", label: "Reports", icon: Shield },
   ];
 
   const moderatedConvs = allConvs.filter(c => c.status === "moderated");
@@ -147,6 +149,7 @@ export default function AdminDashboard() {
       )}
       {activeTab === "users" && <AdminUsers users={allUsers} profiles={allProfiles} />}
       {activeTab === "content" && <AdminContent convs={allConvs} comments={allComments} />}
+      {activeTab === "reports" && <AdminReports />}
     </div>
   );
 }
