@@ -82,7 +82,10 @@ export default function Home() {
         });
       }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["convs"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["convs"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-convs"] });
+    },
   });
 
   const opposeMutation = useMutation({
@@ -117,7 +120,10 @@ export default function Home() {
         });
       }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["convs"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["convs"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-convs"] });
+    },
   });
 
   const handleBookmark = async (conv) => {
