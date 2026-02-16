@@ -130,26 +130,17 @@ export default function FollowSuggestions() {
               {p.bio && <p className="text-xs text-[var(--convs-text-secondary)] mt-0.5 line-clamp-1">{p.bio}</p>}
             </div>
           </div>
-          <Button
-            size="sm"
+          <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); isFollowingUser ? unfollowMutation.mutate(p.email) : followMutation.mutate(p.email); }}
-            className={isFollowingUser
-              ? "bg-[var(--convs-bg-tertiary)] text-[var(--convs-text)] hover:bg-red-50 hover:text-red-500 flex-shrink-0"
-              : "bg-[var(--convs-accent)] text-white hover:bg-[var(--convs-accent-hover)] flex-shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium flex-shrink-0 transition-colors border"
+            style={isFollowingUser
+              ? { background: "var(--convs-bg-tertiary)", color: "var(--convs-text)", borderColor: "var(--convs-border)" }
+              : { background: "#6366F1", color: "#FFFFFF", borderColor: "#6366F1" }
             }
           >
-            {isFollowingUser ? (
-              <>
-                <UserCheck className="w-4 h-4 mr-1" />
-                Following
-              </>
-            ) : (
-              <>
-                <UserPlus className="w-4 h-4 mr-1" />
-                Follow
-              </>
-            )}
-          </Button>
+            {isFollowingUser ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+            {isFollowingUser ? "Following" : "Follow"}
+          </button>
         </div>
       </Link>
     );
