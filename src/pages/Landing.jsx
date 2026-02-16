@@ -10,11 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 
 const ROTATING_HEADLINES = [
-  "Convs — The Intelligent Courtroom of the Internet.",
+  "Convs: The Intelligent Courtroom of the Internet.",
   "Where Arguments Are Tested, Not Attacked.",
-  "Debate with Structure. Reason with Evidence.",
-  "Ideas Don't Go Viral. They Go on Trial.",
   "The Infrastructure for Civilised Disagreement.",
+  "Think Louder. Argue Smarter. Mean It.",
+  "Every Opinion Has a Case. Build Yours.",
 ];
 
 const FEATURES = [
