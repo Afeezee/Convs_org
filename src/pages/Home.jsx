@@ -6,6 +6,8 @@ import ConvCard from "@/components/feed/ConvCard";
 import FeedTabs from "@/components/feed/FeedTabs";
 import TrendingSidebar from "@/components/feed/TrendingSidebar";
 import CreateConvModal from "@/components/feed/CreateConvModal";
+import EditConvModal from "@/components/feed/EditConvModal";
+import ReportConvModal from "@/components/feed/ReportConvModal";
 import ShareModal from "@/components/feed/ShareModal";
 import ReconvModal from "@/components/feed/ReconvModal";
 import ReconvCard from "@/components/feed/ReconvCard";
@@ -17,6 +19,9 @@ export default function Home() {
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
   const [shareConv, setShareConv] = useState(null);
   const [reconvConv, setReconvConv] = useState(null);
+  const [editConv, setEditConv] = useState(null);
+  const [reportConv, setReportConv] = useState(null);
+  const [hiddenIds, setHiddenIds] = useState(new Set());
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -97,7 +102,7 @@ export default function Home() {
   }, [convs]);
 
   const feedItems = React.useMemo(() => {
-    const items = convs.map(c => ({ type: "conv", data: c, date: c.created_date }));
+    const items = convs.filter(c => !hiddenIds.has(c.id) && c.status !== "moderated").map(c => ({ type: "conv", data: c, date: c.created_date }));
     reconvs.forEach(r => {
       if (convsById[r.original_conv_id]) {
         items.push({ type: "reconv", data: r, date: r.created_date });
@@ -120,7 +125,7 @@ export default function Home() {
     }
     // "latest" tab - show everything merged by date
     return items.sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [convs, reconvs, convsById, feedTab]);
+  }, [convs, reconvs, convsById, feedTab, hiddenIds]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -178,12 +183,16 @@ export default function Home() {
                   <ConvCard
                     key={conv.id}
                     conv={conv}
+                    currentUserEmail={user?.email}
                     onSupport={(c) => user && supportMutation.mutate(c)}
                     onOppose={(c) => user && opposeMutation.mutate(c)}
                     onBookmark={handleBookmark}
                     isBookmarked={bookmarkedIds.has(conv.id)}
                     onShare={(c) => setShareConv(c)}
                     onReconv={(c) => setReconvConv(c)}
+                    onEdit={(c) => setEditConv(c)}
+                    onHide={(c) => setHiddenIds(prev => new Set(prev).add(c.id))}
+                    onReport={(c) => setReportConv(c)}
                   />
                 );
               })
@@ -218,6 +227,20 @@ export default function Home() {
         conv={reconvConv}
         user={user}
         onReconved={() => queryClient.invalidateQueries({ queryKey: ["reconvs"] })}
+      />
+
+      <EditConvModal
+        isOpen={!!editConv}
+        onClose={() => setEditConv(null)}
+        conv={editConv}
+        onUpdated={() => queryClient.invalidateQueries({ queryKey: ["convs"] })}
+      />
+
+      <ReportConvModal
+        isOpen={!!reportConv}
+        onClose={() => setReportConv(null)}
+        conv={reportConv}
+        user={user}
       />
     </div>
   );
