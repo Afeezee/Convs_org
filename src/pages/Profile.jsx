@@ -62,9 +62,9 @@ export default function Profile() {
   });
 
   const { data: allConvs = [] } = useQuery({
-    queryKey: ["all-convs-for-reconvs"],
+    queryKey: ["all-convs-for-profile"],
     queryFn: () => base44.entities.Conv.list("-created_date", 200),
-    enabled: reconvs.length > 0,
+    enabled: reconvs.length > 0 || (activeTab === "bookmarks" && bookmarks.length > 0),
   });
 
   const convsById = React.useMemo(() => {
