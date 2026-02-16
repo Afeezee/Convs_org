@@ -38,16 +38,28 @@ export default function CreateConvModal({ isOpen, onClose, user, onCreated }) {
     setIsModerating(true);
     setModerationFeedback(null);
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a moderation AI for an intellectual debate platform called Convs.
-Analyze this post for:
-1. Toxicity (hate speech, harassment, threats, profanity)
-2. Personal attacks (vs. attacking arguments)
-3. Constructiveness score (0-1)
-4. Overall quality
+      prompt: `You are a strict moderation AI for Convs, an intellectual debate platform. Analyze this post carefully and enforce these rules strictly:
+
+BLOCK if ANY of:
+- Contains hate speech, slurs, or discriminatory language
+- Contains direct personal attacks, insults, or name-calling
+- Contains threats or harassment of any kind
+- Contains excessive profanity or vulgarity
+- Is spam, gibberish, or completely off-topic nonsense
+- Promotes violence or self-harm
+
+WARN if ANY of:
+- Uses mildly aggressive or dismissive tone
+- Makes ad hominem arguments (attacks the person instead of the argument)
+- Is low-effort or doesn't contribute meaningfully
+
+APPROVE if:
+- The post presents an argument or claim constructively
+- Even if controversial, it does so respectfully
 
 Post content: "${content}"
 
-Return JSON:`,
+Rate toxicity 0-1, constructiveness 0-1, quality 0-1, and provide clear feedback.`,
       response_json_schema: {
         type: "object",
         properties: {
