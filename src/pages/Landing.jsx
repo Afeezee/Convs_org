@@ -167,7 +167,7 @@ export default function Landing() {
               onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
               variant="outline"
               size="lg"
-              className="border-2 border-[var(--convs-border)] hover:border-[var(--convs-accent)] text-[var(--convs-text)] px-8 py-6 text-lg font-semibold rounded-xl transition-all"
+              className="border-2 border-[var(--convs-accent)] hover:border-[var(--convs-accent-hover)] text-[var(--convs-text)] hover:bg-[var(--convs-accent-light)] px-8 py-6 text-lg font-semibold rounded-xl transition-all"
             >
               Sign In
             </Button>
