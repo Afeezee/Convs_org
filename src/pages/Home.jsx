@@ -52,6 +52,18 @@ export default function Home() {
 
   const supportMutation = useMutation({
     mutationFn: async (conv) => {
+      // Moderate quick support
+      const mod = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a moderation AI. A user is quick-supporting a conv. This is a standard platform action, not a written comment. Always approve unless the system is being abused. Return JSON:`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            action: { type: "string", enum: ["approve", "block"] },
+          },
+        },
+      });
+      if (mod.action === "block") return;
+
       await base44.entities.Comment.create({
         conv_id: conv.id,
         author_email: user.email,
@@ -90,6 +102,18 @@ export default function Home() {
 
   const opposeMutation = useMutation({
     mutationFn: async (conv) => {
+      // Moderate quick oppose
+      const mod = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a moderation AI. A user is quick-opposing a conv. This is a standard platform action, not a written comment. Always approve unless the system is being abused. Return JSON:`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            action: { type: "string", enum: ["approve", "block"] },
+          },
+        },
+      });
+      if (mod.action === "block") return;
+
       await base44.entities.Comment.create({
         conv_id: conv.id,
         author_email: user.email,
