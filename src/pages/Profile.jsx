@@ -9,8 +9,10 @@ import Avatar from "@/components/shared/Avatar";
 import ConvCard from "@/components/feed/ConvCard";
 import ReconvCard from "@/components/feed/ReconvCard";
 import CreateConvModal from "@/components/feed/CreateConvModal";
+import EditConvModal from "@/components/feed/EditConvModal";
 import ShareModal from "@/components/feed/ShareModal";
 import ReconvModal from "@/components/feed/ReconvModal";
+import ProfileAnalytics from "@/components/profile/ProfileAnalytics";
 import moment from "moment";
 
 export default function Profile() {
@@ -22,6 +24,7 @@ export default function Profile() {
   const [showCreateConv, setShowCreateConv] = useState(false);
   const [shareConv, setShareConv] = useState(null);
   const [reconvConv, setReconvConv] = useState(null);
+  const [editConv, setEditConv] = useState(null);
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
   const queryClient = useQueryClient();
 
@@ -46,7 +49,7 @@ export default function Profile() {
   const { data: comments = [] } = useQuery({
     queryKey: ["profile-comments", profileEmail],
     queryFn: () => base44.entities.Comment.filter({ author_email: profileEmail }, "-created_date", 50),
-    enabled: !!profileEmail && activeTab === "replies",
+    enabled: !!profileEmail && (activeTab === "replies" || activeTab === "analytics"),
   });
 
   const { data: bookmarks = [] } = useQuery({
@@ -311,10 +314,12 @@ export default function Profile() {
               <ConvCard
                 key={item.data.id}
                 conv={item.data}
+                currentUserEmail={currentUser?.email}
                 onBookmark={handleBookmark}
                 isBookmarked={bookmarkedIds.has(item.data.id)}
                 onShare={(c) => setShareConv(c)}
                 onReconv={(c) => setReconvConv(c)}
+                onEdit={(c) => setEditConv(c)}
               />
             );
           });
@@ -328,10 +333,7 @@ export default function Profile() {
           </div>
         ))}
         {activeTab === "analytics" && (
-          <div className="convs-card p-6 text-center text-[var(--convs-text-muted)] text-sm">
-            <BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            Your intellectual analytics will appear as you participate in more debates.
-          </div>
+          <ProfileAnalytics convs={convs} comments={comments} profileUser={profileUser} />
         )}
         {activeTab === "bookmarks" && (
           bookmarks.length === 0 ? (
@@ -347,10 +349,12 @@ export default function Profile() {
                 <ConvCard
                   key={bm.id}
                   conv={conv}
+                  currentUserEmail={currentUser?.email}
                   onBookmark={handleBookmark}
                   isBookmarked={bookmarkedIds.has(conv.id)}
                   onShare={(c) => setShareConv(c)}
                   onReconv={(c) => setReconvConv(c)}
+                  onEdit={(c) => setEditConv(c)}
                 />
               );
             })
@@ -368,6 +372,13 @@ export default function Profile() {
       )}
 
       <ShareModal isOpen={!!shareConv} onClose={() => setShareConv(null)} conv={shareConv} />
+
+      <EditConvModal
+        isOpen={!!editConv}
+        onClose={() => setEditConv(null)}
+        conv={editConv}
+        onUpdated={() => queryClient.invalidateQueries({ queryKey: ["profile-convs", profileEmail] })}
+      />
 
       <ReconvModal
         isOpen={!!reconvConv}
