@@ -1,13 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { MessageSquare, Bookmark, Share2, ThumbsUp, ThumbsDown, MoreHorizontal } from "lucide-react";
+import { MessageSquare, Bookmark, Share2, ThumbsUp, ThumbsDown, MoreHorizontal, Repeat2 } from "lucide-react";
 import Avatar from "../shared/Avatar";
 import TopicTag from "../shared/TopicTag";
 import SupportOpposeBar from "../shared/SupportOpposeBar";
 import moment from "moment";
 
-export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBookmarked }) {
+export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBookmarked, onShare, onReconv }) {
   const timeAgo = moment(conv.created_date).fromNow();
 
   return (
@@ -98,6 +98,12 @@ export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBook
             <span>{conv.comment_count || 0}</span>
           </Link>
           <button
+            onClick={(e) => { e.preventDefault(); onReconv?.(conv); }}
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm text-[var(--convs-text-secondary)] hover:text-[var(--convs-accent)] hover:bg-[var(--convs-accent-light)] transition-all"
+          >
+            <Repeat2 className="w-4 h-4" />
+          </button>
+          <button
             onClick={(e) => { e.preventDefault(); onBookmark?.(conv); }}
             className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm transition-all ${
               isBookmarked
@@ -107,7 +113,10 @@ export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBook
           >
             <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`} />
           </button>
-          <button className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm text-[var(--convs-text-secondary)] hover:text-[var(--convs-accent)] hover:bg-[var(--convs-accent-light)] transition-all">
+          <button
+            onClick={(e) => { e.preventDefault(); onShare?.(conv); }}
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm text-[var(--convs-text-secondary)] hover:text-[var(--convs-accent)] hover:bg-[var(--convs-accent-light)] transition-all"
+          >
             <Share2 className="w-4 h-4" />
           </button>
         </div>
