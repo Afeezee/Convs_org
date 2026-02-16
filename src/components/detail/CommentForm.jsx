@@ -34,52 +34,58 @@ export default function CommentForm({ convId, conv, user, highlightedText, onCom
     setIsSubmitting(true);
     setModerationMsg(null);
 
-    // Moderate
+    // AI Moderation Pipeline (5-step layered moderation)
     const mod = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a strict moderation AI for Convs, an intellectual debate platform. Analyze this comment carefully and enforce these rules strictly:
+      prompt: `You are a strict moderation AI for Convs, an intellectual debate platform. Run a 5-step moderation pipeline on this comment:
 
-BLOCK if ANY of:
-- Contains hate speech, slurs, or discriminatory language
-- Contains direct personal attacks, insults, or name-calling against individuals
-- Contains threats or harassment of any kind
-- Contains excessive profanity or vulgarity
-- Is spam, gibberish, or completely off-topic nonsense
-- Promotes violence or self-harm
+STEP 1 — TOXICITY DETECTION:
+Check for hate speech, harassment, threats, profanity. Score toxicity 0–1. If toxicity_score >= 0.85 → action must be "block".
 
-WARN if ANY of:
-- Uses mildly aggressive or dismissive tone
-- Makes ad hominem arguments (attacks the person instead of the argument)
-- Is low-effort or doesn't contribute meaningfully to the debate
+STEP 2 — PERSONAL ATTACK DETECTION:
+Allow: "This argument lacks evidence." (attacks the argument)
+Block: "You are ignorant." (attacks the person)
+Set personal_attack to true/false.
 
-APPROVE if:
-- The comment engages with the argument constructively
-- Even if the commenter disagrees strongly, they do so respectfully
+STEP 3 — CONSTRUCTIVENESS SCORE:
+Rate 0–1 how constructive the comment is. If < 0.4 → action should be "warn" and feedback should prompt user to elaborate with more substance.
+
+STEP 4 — FLAW/STRENGTH TAG VALIDATION:
+If a flaw_tag or strength_tag is provided, check if it semantically matches the comment content. Score flaw_match_score 0–1. If mismatch (< 0.4), suggest a better tag in feedback.
+
+STEP 5 — BIAS & MANIPULATION DETECTION:
+Check for emotionally manipulative language, fear-mongering, guilt-tripping. If detected, set action to "warn" with soft warning in feedback.
+
+FINAL ACTION RULES:
+- "block" if toxicity >= 0.85 OR contains personal attacks OR promotes violence/self-harm
+- "warn" if constructiveness < 0.4 OR emotionally manipulative OR flaw tag mismatch
+- "approve" if the comment engages constructively, even if it disagrees strongly
 
 Comment to moderate: "${content}"
 Stance: ${stance}
-${flawTag ? `Flaw tag: ${flawTag}` : ""}
-${strengthTag ? `Strength tag: ${strengthTag}` : ""}
+${flawTag ? `Flaw tag selected: ${flawTag}` : "No flaw tag selected."}
+${strengthTag ? `Strength tag selected: ${strengthTag}` : "No strength tag selected."}
 
-Rate constructiveness 0-1 and provide clear feedback explaining your decision.`,
+Provide transparent, helpful feedback explaining your decision so the user understands.`,
       response_json_schema: {
         type: "object",
         properties: {
+          toxicity_score: { type: "number" },
+          personal_attack: { type: "boolean" },
           constructiveness_score: { type: "number" },
-          has_personal_attack: { type: "boolean" },
-          flaw_match: { type: "boolean" },
+          flaw_match_score: { type: "number" },
           action: { type: "string", enum: ["approve", "warn", "block"] },
-          feedback: { type: "string" },
+          feedback_message: { type: "string" },
         },
       },
     });
 
     if (mod.action === "block") {
-      setModerationMsg(mod.feedback);
+      setModerationMsg(mod.feedback_message);
       setIsSubmitting(false);
       return;
     }
     if (mod.action === "warn") {
-      setModerationMsg(mod.feedback);
+      setModerationMsg(mod.feedback_message);
     }
 
     await base44.entities.Comment.create({

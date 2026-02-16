@@ -38,28 +38,32 @@ export default function CreateConvModal({ isOpen, onClose, user, onCreated }) {
     setIsModerating(true);
     setModerationFeedback(null);
     const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a strict moderation AI for Convs, an intellectual debate platform. Analyze this post carefully and enforce these rules strictly:
+      prompt: `You are a strict moderation AI for Convs, an intellectual debate platform. Run a 5-step moderation pipeline on this post:
 
-BLOCK if ANY of:
-- Contains hate speech, slurs, or discriminatory language
-- Contains direct personal attacks, insults, or name-calling
-- Contains threats or harassment of any kind
-- Contains excessive profanity or vulgarity
-- Is spam, gibberish, or completely off-topic nonsense
-- Promotes violence or self-harm
+STEP 1 — TOXICITY DETECTION:
+Check for hate speech, harassment, threats, profanity. Score toxicity 0–1. If toxicity_score >= 0.85 → action must be "block".
 
-WARN if ANY of:
-- Uses mildly aggressive or dismissive tone
-- Makes ad hominem arguments (attacks the person instead of the argument)
-- Is low-effort or doesn't contribute meaningfully
+STEP 2 — PERSONAL ATTACK DETECTION:
+Allow: "This argument lacks evidence." (attacks the argument)
+Block: "You are ignorant." (attacks the person)
 
-APPROVE if:
-- The post presents an argument or claim constructively
-- Even if controversial, it does so respectfully
+STEP 3 — CONSTRUCTIVENESS SCORE:
+Rate 0–1 how constructive the post is. If < 0.4 → action should be "warn" and prompt user to add more substance.
+
+STEP 4 — QUALITY SCORE:
+Rate overall argument quality 0–1 considering logic, evidence, and clarity.
+
+STEP 5 — BIAS & MANIPULATION DETECTION:
+Check for emotionally manipulative language. If detected, action should be "warn" with feedback.
+
+FINAL ACTION RULES:
+- "block" if toxicity >= 0.85 OR personal attacks OR promotes violence/self-harm
+- "warn" if constructiveness < 0.4 OR emotionally manipulative
+- "approve" if the post presents an argument constructively
 
 Post content: "${content}"
 
-Rate toxicity 0-1, constructiveness 0-1, quality 0-1, and provide clear feedback.`,
+Provide transparent, helpful feedback explaining your decision.`,
       response_json_schema: {
         type: "object",
         properties: {

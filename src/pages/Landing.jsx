@@ -157,7 +157,7 @@ export default function Landing() {
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <button
-              onClick={() => base44.auth.redirectToLogin()}
+              onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
               className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
               style={{ background: "#6366F1", color: "#FFFFFF" }}
             >
@@ -165,7 +165,7 @@ export default function Landing() {
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
             <button
-              onClick={() => base44.auth.redirectToLogin()}
+              onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
               className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold rounded-xl border-2 transition-all"
               style={{ borderColor: "var(--convs-border)", color: "var(--convs-text)", background: "transparent" }}
             >
@@ -310,7 +310,7 @@ export default function Landing() {
               Where structure beats noise. Where reasoning matters.
             </p>
             <button
-              onClick={() => base44.auth.redirectToLogin()}
+              onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
               className="inline-flex items-center justify-center px-10 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
               style={{ background: "#6366F1", color: "#FFFFFF" }}
             >

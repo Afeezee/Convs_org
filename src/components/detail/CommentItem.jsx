@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import Avatar from "../shared/Avatar";
 import StanceBadge from "../shared/StanceBadge";
+import CommentRating from "./CommentRating";
 import { ExternalLink, Quote } from "lucide-react";
 import moment from "moment";
 
-export default function CommentItem({ comment }) {
+export default function CommentItem({ comment, currentUserEmail }) {
   return (
     <div className="py-4 border-b border-[var(--convs-border)] last:border-0 animate-fade-in">
       <div className="flex gap-3">
@@ -62,6 +63,7 @@ export default function CommentItem({ comment }) {
             </a>
           )}
 
+          <CommentRating commentId={comment.id} currentUserEmail={currentUserEmail} />
 
         </div>
       </div>
