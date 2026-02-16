@@ -106,14 +106,14 @@ export default function Profile() {
           />
           <div className="flex gap-2 pb-2 flex-wrap">
             {isOwnProfile && (
-              <Button
+              <button
                 onClick={() => setShowCreateConv(true)}
-                size="sm"
-                className="gap-1.5 bg-[var(--convs-accent)] hover:bg-[var(--convs-accent-hover)] text-white"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                style={{ background: "#6366F1", color: "#FFFFFF" }}
               >
                 <Plus className="w-3.5 h-3.5" />
                 New Conv
-              </Button>
+              </button>
             )}
             {isOwnProfile && currentUser?.role === "admin" && (
               <Link to={createPageUrl("AdminDashboard")}>
