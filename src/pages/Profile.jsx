@@ -104,10 +104,28 @@ export default function Profile() {
     if (isFollowing) {
       const follows = await base44.entities.Follow.filter({ follower_email: currentUser.email, following_email: profileEmail });
       if (follows[0]) await base44.entities.Follow.delete(follows[0].id);
+      // Update counts
+      if (profileUser) {
+        await base44.entities.Profile.update(profileUser.id, { followers_count: Math.max((profileUser.followers_count || 0) - 1, 0) });
+      }
+      const myProfiles = await base44.entities.Profile.filter({ email: currentUser.email });
+      if (myProfiles[0]) {
+        await base44.entities.Profile.update(myProfiles[0].id, { following_count: Math.max((myProfiles[0].following_count || 0) - 1, 0) });
+      }
       setIsFollowing(false);
+      queryClient.invalidateQueries({ queryKey: ["profile-data", profileEmail] });
     } else {
       await base44.entities.Follow.create({ follower_email: currentUser.email, following_email: profileEmail });
+      // Update counts
+      if (profileUser) {
+        await base44.entities.Profile.update(profileUser.id, { followers_count: (profileUser.followers_count || 0) + 1 });
+      }
+      const myProfiles = await base44.entities.Profile.filter({ email: currentUser.email });
+      if (myProfiles[0]) {
+        await base44.entities.Profile.update(myProfiles[0].id, { following_count: (myProfiles[0].following_count || 0) + 1 });
+      }
       setIsFollowing(true);
+      queryClient.invalidateQueries({ queryKey: ["profile-data", profileEmail] });
     }
   };
 

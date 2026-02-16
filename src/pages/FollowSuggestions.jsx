@@ -45,16 +45,42 @@ export default function FollowSuggestions() {
   const followingEmails = new Set(myFollows.map(f => f.following_email));
 
   const followMutation = useMutation({
-    mutationFn: (targetEmail) => base44.entities.Follow.create({ follower_email: user.email, following_email: targetEmail }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-follows"] }),
+    mutationFn: async (targetEmail) => {
+      await base44.entities.Follow.create({ follower_email: user.email, following_email: targetEmail });
+      // Update follower/following counts on profiles
+      const targetProfiles = await base44.entities.Profile.filter({ email: targetEmail });
+      if (targetProfiles[0]) {
+        await base44.entities.Profile.update(targetProfiles[0].id, { followers_count: (targetProfiles[0].followers_count || 0) + 1 });
+      }
+      const myProfiles = await base44.entities.Profile.filter({ email: user.email });
+      if (myProfiles[0]) {
+        await base44.entities.Profile.update(myProfiles[0].id, { following_count: (myProfiles[0].following_count || 0) + 1 });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-follows"] });
+      queryClient.invalidateQueries({ queryKey: ["all-profiles-search"] });
+    },
   });
 
   const unfollowMutation = useMutation({
     mutationFn: async (targetEmail) => {
       const follows = await base44.entities.Follow.filter({ follower_email: user.email, following_email: targetEmail });
       if (follows[0]) await base44.entities.Follow.delete(follows[0].id);
+      // Update follower/following counts on profiles
+      const targetProfiles = await base44.entities.Profile.filter({ email: targetEmail });
+      if (targetProfiles[0]) {
+        await base44.entities.Profile.update(targetProfiles[0].id, { followers_count: Math.max((targetProfiles[0].followers_count || 0) - 1, 0) });
+      }
+      const myProfiles = await base44.entities.Profile.filter({ email: user.email });
+      if (myProfiles[0]) {
+        await base44.entities.Profile.update(myProfiles[0].id, { following_count: Math.max((myProfiles[0].following_count || 0) - 1, 0) });
+      }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-follows"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["my-follows"] });
+      queryClient.invalidateQueries({ queryKey: ["all-profiles-search"] });
+    },
   });
 
   const interactedEmails = new Set([
@@ -80,9 +106,8 @@ export default function FollowSuggestions() {
   ).slice(0, 10);
 
   const popularProfiles = otherProfiles
-    .filter(p => !followingEmails.has(p.email))
     .sort((a, b) => (b.followers_count || 0) - (a.followers_count || 0))
-    .slice(0, 10);
+    .slice(0, 20);
 
   if (isLoading) {
     return (
@@ -97,11 +122,11 @@ export default function FollowSuggestions() {
     return (
       <Link key={p.id} to={createPageUrl("Profile") + `?email=${p.email}`} className="block">
         <div className="convs-card p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <Avatar name={p.full_name} image={p.profile_image} size="md" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="font-semibold text-[var(--convs-text)] truncate">{p.full_name}</p>
-              <p className="text-xs text-[var(--convs-text-muted)] truncate">@{p.username || p.email?.split("@")[0]}</p>
+              <p className="text-xs text-[var(--convs-text-muted)] truncate">@{p.username || p.email?.split("@")[0]} · {p.followers_count || 0} followers</p>
               {p.bio && <p className="text-xs text-[var(--convs-text-secondary)] mt-0.5 line-clamp-1">{p.bio}</p>}
             </div>
           </div>
@@ -144,12 +169,16 @@ export default function FollowSuggestions() {
         />
       </div>
 
-      {searchQuery && searchResults.length > 0 && (
+      {searchQuery && (
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-[var(--convs-text)] mb-3">Search Results</h2>
-          <div className="space-y-2">
-            {searchResults.map(p => renderProfileCard(p))}
-          </div>
+          {searchResults.length > 0 ? (
+            <div className="space-y-2">
+              {searchResults.map(p => renderProfileCard(p))}
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--convs-text-muted)] py-8 text-center">No users found matching "{searchQuery}"</p>
+          )}
         </div>
       )}
 
