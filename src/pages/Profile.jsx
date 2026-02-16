@@ -49,7 +49,7 @@ export default function Profile() {
   const { data: comments = [] } = useQuery({
     queryKey: ["profile-comments", profileEmail],
     queryFn: () => base44.entities.Comment.filter({ author_email: profileEmail }, "-created_date", 50),
-    enabled: !!profileEmail && (activeTab === "replies" || activeTab === "analytics"),
+    enabled: !!profileEmail,
   });
 
   const { data: bookmarks = [] } = useQuery({
@@ -244,11 +244,11 @@ export default function Profile() {
             <p className="text-[10px] text-[var(--convs-text-muted)] uppercase tracking-wider">Convs</p>
           </div>
           <div className="convs-card p-3 text-center">
-            <p className="text-lg font-bold text-emerald-500">{profileUser?.support_count || 0}</p>
+            <p className="text-lg font-bold text-emerald-500">{convs.reduce((sum, c) => sum + (c.support_count || 0), 0)}</p>
             <p className="text-[10px] text-[var(--convs-text-muted)] uppercase tracking-wider">Supported</p>
           </div>
           <div className="convs-card p-3 text-center">
-            <p className="text-lg font-bold text-red-500">{profileUser?.oppose_count || 0}</p>
+            <p className="text-lg font-bold text-red-500">{convs.reduce((sum, c) => sum + (c.oppose_count || 0), 0)}</p>
             <p className="text-[10px] text-[var(--convs-text-muted)] uppercase tracking-wider">Opposed</p>
           </div>
         </div>

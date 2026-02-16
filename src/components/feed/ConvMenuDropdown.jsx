@@ -23,10 +23,12 @@ export default function ConvMenuDropdown({ conv, isAuthor, onEdit, onHide, onRep
       </button>
 
       {open && (
-        <div
-          className="absolute right-0 top-full mt-1 w-44 rounded-xl border shadow-lg z-50 py-1"
-          style={{ background: "var(--convs-card)", borderColor: "var(--convs-border)" }}
-        >
+        <>
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" onClick={() => setOpen(false)} />
+          <div
+            className="absolute right-0 top-full mt-1 w-44 rounded-xl border shadow-lg z-50 py-1"
+            style={{ background: "var(--convs-card)", borderColor: "var(--convs-border)" }}
+          >
           {isAuthor && (
             <button
               onClick={() => { setOpen(false); onEdit?.(conv); }}
@@ -51,6 +53,7 @@ export default function ConvMenuDropdown({ conv, isAuthor, onEdit, onHide, onRep
             Report Post
           </button>
         </div>
+        </>
       )}
     </div>
   );
