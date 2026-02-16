@@ -179,15 +179,15 @@ Rate constructiveness 0-1, detect personal attacks, check if flaw tag matches co
         >
           + Add evidence
         </button>
-        <Button
+        <button
           onClick={handleSubmit}
           disabled={!stance || !content.trim() || isSubmitting}
-          size="sm"
-          className="bg-[var(--convs-accent)] hover:bg-[var(--convs-accent-hover)] text-white gap-1.5"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ background: "#6366F1", color: "#FFFFFF" }}
         >
           {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
           Post
-        </Button>
+        </button>
       </div>
     </div>
   );
