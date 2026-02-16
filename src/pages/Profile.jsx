@@ -324,11 +324,28 @@ export default function Profile() {
             Your intellectual analytics will appear as you participate in more debates.
           </div>
         )}
-        {activeTab === "bookmarks" && bookmarks.length === 0 && (
-          <div className="convs-card p-6 text-center text-[var(--convs-text-muted)] text-sm">
-            <Bookmark className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            No bookmarks yet.
-          </div>
+        {activeTab === "bookmarks" && (
+          bookmarks.length === 0 ? (
+            <div className="convs-card p-6 text-center text-[var(--convs-text-muted)] text-sm">
+              <Bookmark className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              No bookmarks yet.
+            </div>
+          ) : (
+            bookmarks.map(bm => {
+              const conv = convsById[bm.conv_id];
+              if (!conv) return null;
+              return (
+                <ConvCard
+                  key={bm.id}
+                  conv={conv}
+                  onBookmark={handleBookmark}
+                  isBookmarked={bookmarkedIds.has(conv.id)}
+                  onShare={(c) => setShareConv(c)}
+                  onReconv={(c) => setReconvConv(c)}
+                />
+              );
+            })
+          )
         )}
       </div>
 
