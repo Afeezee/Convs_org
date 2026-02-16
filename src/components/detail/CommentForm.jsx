@@ -74,12 +74,12 @@ Rate constructiveness 0-1 and provide clear feedback explaining your decision.`,
     });
 
     if (mod.action === "block") {
-      setModerationFeedback(mod.feedback);
+      setModerationMsg(mod.feedback);
       setIsSubmitting(false);
       return;
     }
     if (mod.action === "warn") {
-      setModerationFeedback(mod.feedback);
+      setModerationMsg(mod.feedback);
     }
 
     await base44.entities.Comment.create({
