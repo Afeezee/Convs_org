@@ -174,7 +174,7 @@ export default function ConvDetail() {
             )}
 
             <div className="mt-4 pt-4 border-t border-[var(--convs-border)]">
-              <SupportOpposeBar support={conv.support_count || 0} oppose={conv.oppose_count || 0} height="h-2" />
+              <SupportOpposeBar support={supportComments.length} oppose={opposeComments.length} height="h-2" />
             </div>
           </article>
 
