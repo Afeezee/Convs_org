@@ -3,8 +3,9 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 import { BarChart3, TrendingUp } from "lucide-react";
 
 export default function ConvAnalytics({ conv, comments = [] }) {
-  const supportCount = conv.support_count || 0;
-  const opposeCount = conv.oppose_count || 0;
+  // Compute live counts from actual comments instead of stored (possibly stale) entity values
+  const supportCount = comments.filter(c => c.stance === "support").length;
+  const opposeCount = comments.filter(c => c.stance === "oppose").length;
   const total = supportCount + opposeCount;
 
   const pieData = [
