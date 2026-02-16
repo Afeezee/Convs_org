@@ -2,17 +2,21 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import ConvCard from "@/components/feed/ConvCard";
 import FeedTabs from "@/components/feed/FeedTabs";
 import TrendingSidebar from "@/components/feed/TrendingSidebar";
 import CreateConvModal from "@/components/feed/CreateConvModal";
+import ShareModal from "@/components/feed/ShareModal";
+import ReconvModal from "@/components/feed/ReconvModal";
+import ReconvCard from "@/components/feed/ReconvCard";
 
 export default function Home() {
   const [feedTab, setFeedTab] = useState("trending");
   const [showCreate, setShowCreate] = useState(false);
   const [user, setUser] = useState(null);
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
+  const [shareConv, setShareConv] = useState(null);
+  const [reconvConv, setReconvConv] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -27,6 +31,11 @@ export default function Home() {
   const { data: users = [] } = useQuery({
     queryKey: ["suggested-users"],
     queryFn: () => base44.entities.User.list("-created_date", 10),
+  });
+
+  const { data: reconvs = [] } = useQuery({
+    queryKey: ["reconvs"],
+    queryFn: () => base44.entities.Reconv.list("-created_date", 50),
   });
 
   useEffect(() => {
@@ -80,15 +89,38 @@ export default function Home() {
     }
   };
 
-  const sortedConvs = React.useMemo(() => {
+  // Build a merged feed: convs + reconvs, sorted by date
+  const convsById = React.useMemo(() => {
+    const map = {};
+    convs.forEach(c => { map[c.id] = c; });
+    return map;
+  }, [convs]);
+
+  const feedItems = React.useMemo(() => {
+    const items = convs.map(c => ({ type: "conv", data: c, date: c.created_date }));
+    reconvs.forEach(r => {
+      if (convsById[r.original_conv_id]) {
+        items.push({ type: "reconv", data: r, date: r.created_date });
+      }
+    });
+
     if (feedTab === "debate") {
-      return [...convs].sort((a, b) => ((b.oppose_count || 0) / Math.max((b.support_count || 0) + (b.oppose_count || 0), 1)) - ((a.oppose_count || 0) / Math.max((a.support_count || 0) + (a.oppose_count || 0), 1)));
+      return items.filter(i => i.type === "conv").sort((a, b) => {
+        const bScore = (b.data.oppose_count || 0) / Math.max((b.data.support_count || 0) + (b.data.oppose_count || 0), 1);
+        const aScore = (a.data.oppose_count || 0) / Math.max((a.data.support_count || 0) + (a.data.oppose_count || 0), 1);
+        return bScore - aScore;
+      });
     }
     if (feedTab === "trending") {
-      return [...convs].sort((a, b) => ((b.comment_count || 0) + (b.support_count || 0) + (b.oppose_count || 0)) - ((a.comment_count || 0) + (a.support_count || 0) + (a.oppose_count || 0)));
+      return items.filter(i => i.type === "conv").sort((a, b) => {
+        const bEngagement = (b.data.comment_count || 0) + (b.data.support_count || 0) + (b.data.oppose_count || 0);
+        const aEngagement = (a.data.comment_count || 0) + (a.data.support_count || 0) + (a.data.oppose_count || 0);
+        return bEngagement - aEngagement;
+      });
     }
-    return convs;
-  }, [convs, feedTab]);
+    // "latest" tab - show everything merged by date
+    return items.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [convs, reconvs, convsById, feedTab]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
@@ -118,21 +150,43 @@ export default function Home() {
               <div className="flex justify-center py-20">
                 <Loader2 className="w-6 h-6 animate-spin text-[var(--convs-accent)]" />
               </div>
-            ) : sortedConvs.length === 0 ? (
+            ) : feedItems.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-[var(--convs-text-muted)] text-sm">No convs yet. Start the conversation.</p>
               </div>
             ) : (
-              sortedConvs.map(conv => (
-                <ConvCard
-                  key={conv.id}
-                  conv={conv}
-                  onSupport={(c) => user && supportMutation.mutate(c)}
-                  onOppose={(c) => user && opposeMutation.mutate(c)}
-                  onBookmark={handleBookmark}
-                  isBookmarked={bookmarkedIds.has(conv.id)}
-                />
-              ))
+              feedItems.map(item => {
+                if (item.type === "reconv") {
+                  const rc = item.data;
+                  const origConv = convsById[rc.original_conv_id];
+                  return (
+                    <ReconvCard
+                      key={`reconv-${rc.id}`}
+                      reconv={rc}
+                      originalConv={origConv}
+                      onSupport={(c) => user && supportMutation.mutate(c)}
+                      onOppose={(c) => user && opposeMutation.mutate(c)}
+                      onBookmark={handleBookmark}
+                      isBookmarked={bookmarkedIds.has(origConv?.id)}
+                      onShare={(c) => setShareConv(c)}
+                      onReconv={(c) => setReconvConv(c)}
+                    />
+                  );
+                }
+                const conv = item.data;
+                return (
+                  <ConvCard
+                    key={conv.id}
+                    conv={conv}
+                    onSupport={(c) => user && supportMutation.mutate(c)}
+                    onOppose={(c) => user && opposeMutation.mutate(c)}
+                    onBookmark={handleBookmark}
+                    isBookmarked={bookmarkedIds.has(conv.id)}
+                    onShare={(c) => setShareConv(c)}
+                    onReconv={(c) => setReconvConv(c)}
+                  />
+                );
+              })
             )}
           </div>
         </div>
@@ -150,6 +204,20 @@ export default function Home() {
         onClose={() => setShowCreate(false)}
         user={user}
         onCreated={() => queryClient.invalidateQueries({ queryKey: ["convs"] })}
+      />
+
+      <ShareModal
+        isOpen={!!shareConv}
+        onClose={() => setShareConv(null)}
+        conv={shareConv}
+      />
+
+      <ReconvModal
+        isOpen={!!reconvConv}
+        onClose={() => setReconvConv(null)}
+        conv={reconvConv}
+        user={user}
+        onReconved={() => queryClient.invalidateQueries({ queryKey: ["reconvs"] })}
       />
     </div>
   );

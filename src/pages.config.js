@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AdminDashboard from './pages/AdminDashboard';
 import ConvDetail from './pages/ConvDetail';
 import Explore from './pages/Explore';
 import FollowSuggestions from './pages/FollowSuggestions';
@@ -56,11 +57,11 @@ import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import AdminDashboard from './pages/AdminDashboard';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AdminDashboard": AdminDashboard,
     "ConvDetail": ConvDetail,
     "Explore": Explore,
     "FollowSuggestions": FollowSuggestions,
@@ -70,7 +71,6 @@ export const PAGES = {
     "Notifications": Notifications,
     "Profile": Profile,
     "Settings": Settings,
-    "AdminDashboard": AdminDashboard,
 }
 
 export const pagesConfig = {
