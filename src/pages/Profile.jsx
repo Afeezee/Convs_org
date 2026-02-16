@@ -3,10 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Users, MessageSquare, BarChart3, Bookmark, Settings, Loader2 } from "lucide-react";
+import { Calendar, Users, MessageSquare, BarChart3, Bookmark, Settings, Loader2, Plus, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Avatar from "@/components/shared/Avatar";
 import ConvCard from "@/components/feed/ConvCard";
+import CreateConvModal from "@/components/feed/CreateConvModal";
 import moment from "moment";
 
 export default function Profile() {
@@ -15,6 +16,7 @@ export default function Profile() {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState("convs");
   const [isFollowing, setIsFollowing] = useState(false);
+  const [showCreateConv, setShowCreateConv] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -102,7 +104,25 @@ export default function Profile() {
             size="xl"
             className="ring-4 ring-[var(--convs-bg)] relative -mt-6"
           />
-          <div className="flex gap-2 pb-2">
+          <div className="flex gap-2 pb-2 flex-wrap">
+            {isOwnProfile && (
+              <Button
+                onClick={() => setShowCreateConv(true)}
+                size="sm"
+                className="gap-1.5 bg-[var(--convs-accent)] hover:bg-[var(--convs-accent-hover)] text-white"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                New Conv
+              </Button>
+            )}
+            {isOwnProfile && currentUser?.role === "admin" && (
+              <Link to={createPageUrl("AdminDashboard")}>
+                <Button variant="outline" size="sm" className="gap-1.5 border-[var(--convs-border)] text-[var(--convs-accent)]">
+                  <Shield className="w-3.5 h-3.5" />
+                  Admin
+                </Button>
+              </Link>
+            )}
             {isOwnProfile ? (
               <Link to={createPageUrl("Settings")}>
                 <Button variant="outline" size="sm" className="gap-1.5 border-[var(--convs-border)] text-[var(--convs-text)]">
@@ -214,6 +234,15 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {currentUser && (
+        <CreateConvModal
+          isOpen={showCreateConv}
+          onClose={() => setShowCreateConv(false)}
+          user={currentUser}
+          onCreated={() => queryClient.invalidateQueries({ queryKey: ["profile-convs", profileEmail] })}
+        />
+      )}
     </div>
   );
 }
