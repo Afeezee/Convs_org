@@ -10,6 +10,7 @@ import SupportOpposeBar from "@/components/shared/SupportOpposeBar";
 import CommentForm from "@/components/detail/CommentForm";
 import CommentItem from "@/components/detail/CommentItem";
 import ConvAnalytics from "@/components/detail/ConvAnalytics";
+import ShareModal from "@/components/feed/ShareModal";
 import moment from "moment";
 
 export default function ConvDetail() {
@@ -17,11 +18,19 @@ export default function ConvDetail() {
   const convId = params.get("id");
   const [user, setUser] = useState(null);
   const [highlightedText, setHighlightedText] = useState("");
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
+    base44.auth.me().then(u => {
+      setUser(u);
+      if (u && convId) {
+        base44.entities.Bookmark.filter({ user_email: u.email, conv_id: convId })
+          .then(bms => setIsBookmarked(bms.length > 0));
+      }
+    }).catch(() => {});
+  }, [convId]);
 
   const { data: convs = [], isLoading: convLoading } = useQuery({
     queryKey: ["conv", convId],
@@ -43,6 +52,18 @@ export default function ConvDetail() {
       setHighlightedText(text);
     }
   }, []);
+
+  const handleBookmark = async () => {
+    if (!user || !conv) return;
+    if (isBookmarked) {
+      const bms = await base44.entities.Bookmark.filter({ user_email: user.email, conv_id: conv.id });
+      if (bms[0]) await base44.entities.Bookmark.delete(bms[0].id);
+      setIsBookmarked(false);
+    } else {
+      await base44.entities.Bookmark.create({ user_email: user.email, conv_id: conv.id });
+      setIsBookmarked(true);
+    }
+  };
 
   const handleCommented = () => {
     queryClient.invalidateQueries({ queryKey: ["comments", convId] });
@@ -106,10 +127,20 @@ export default function ConvDetail() {
                 <p className="text-sm text-[var(--convs-text-muted)]">{moment(conv.created_date).format("MMM D, YYYY · h:mm A")}</p>
               </div>
               <div className="ml-auto flex items-center gap-2">
-                <button className="p-2 rounded-lg hover:bg-[var(--convs-bg-tertiary)] text-[var(--convs-text-muted)]">
-                  <Bookmark className="w-4 h-4" />
+                <button
+                  onClick={handleBookmark}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isBookmarked
+                      ? "text-[var(--convs-accent)]"
+                      : "text-[var(--convs-text-muted)] hover:bg-[var(--convs-bg-tertiary)]"
+                  }`}
+                >
+                  <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`} />
                 </button>
-                <button className="p-2 rounded-lg hover:bg-[var(--convs-bg-tertiary)] text-[var(--convs-text-muted)]">
+                <button
+                  onClick={() => setShowShare(true)}
+                  className="p-2 rounded-lg hover:bg-[var(--convs-bg-tertiary)] text-[var(--convs-text-muted)]"
+                >
                   <Share2 className="w-4 h-4" />
                 </button>
               </div>
@@ -224,6 +255,7 @@ export default function ConvDetail() {
           </div>
         </aside>
       </div>
+      <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} conv={conv} />
     </div>
   );
 }
