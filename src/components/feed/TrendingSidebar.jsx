@@ -12,7 +12,7 @@ const TRENDING_TOPICS = [
   { topic: "Health", count: 980 },
 ];
 
-export default function TrendingSidebar({ suggestedUsers = [] }) {
+export default function TrendingSidebar({ suggestedUsers: suggestedProfiles = [] }) {
   return (
     <div className="space-y-4">
       {/* Trending Topics */}
@@ -44,26 +44,26 @@ export default function TrendingSidebar({ suggestedUsers = [] }) {
       </div>
 
       {/* Suggested Users */}
-      {suggestedUsers.length > 0 && (
+      {suggestedProfiles.length > 0 && (
         <div className="convs-card p-4">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-4 h-4 text-[var(--convs-accent)]" />
             <h3 className="font-bold text-sm text-[var(--convs-text)]">Suggested Thinkers</h3>
           </div>
           <div className="space-y-3">
-            {suggestedUsers.slice(0, 5).map(u => (
+            {suggestedProfiles.slice(0, 5).map(p => (
               <Link
-                key={u.id}
-                to={createPageUrl("Profile") + `?email=${u.email}`}
+                key={p.id}
+                to={createPageUrl("Profile") + `?email=${p.email}`}
                 className="flex items-center gap-3 group"
               >
-                <Avatar name={u.full_name} image={u.profile_image} size="sm" />
+                <Avatar name={p.full_name} image={p.profile_image} size="sm" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[var(--convs-text)] truncate group-hover:text-[var(--convs-accent)] transition-colors">
-                    {u.full_name}
+                    {p.full_name}
                   </p>
                   <p className="text-xs text-[var(--convs-text-muted)] truncate">
-                    @{u.username || u.email?.split("@")[0]}
+                    @{p.username || p.email?.split("@")[0]}
                   </p>
                 </div>
               </Link>

@@ -47,48 +47,48 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AboutConvs from './pages/AboutConvs';
 import AdminDashboard from './pages/AdminDashboard';
+import ApiPage from './pages/ApiPage';
+import CommunityGuidelines from './pages/CommunityGuidelines';
 import ConvDetail from './pages/ConvDetail';
+import Documentation from './pages/Documentation';
 import Explore from './pages/Explore';
+import Features from './pages/Features';
 import FollowSuggestions from './pages/FollowSuggestions';
 import Home from './pages/Home';
+import HowItWorks from './pages/HowItWorks';
 import Landing from './pages/Landing';
 import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import AboutConvs from './pages/AboutConvs';
-import HowItWorks from './pages/HowItWorks';
-import Features from './pages/Features';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import CommunityGuidelines from './pages/CommunityGuidelines';
-import Documentation from './pages/Documentation';
-import ApiPage from './pages/ApiPage';
 import Support from './pages/Support';
+import TermsOfService from './pages/TermsOfService';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AboutConvs": AboutConvs,
     "AdminDashboard": AdminDashboard,
+    "ApiPage": ApiPage,
+    "CommunityGuidelines": CommunityGuidelines,
     "ConvDetail": ConvDetail,
+    "Documentation": Documentation,
     "Explore": Explore,
+    "Features": Features,
     "FollowSuggestions": FollowSuggestions,
     "Home": Home,
+    "HowItWorks": HowItWorks,
     "Landing": Landing,
     "Messages": Messages,
     "Notifications": Notifications,
+    "PrivacyPolicy": PrivacyPolicy,
     "Profile": Profile,
     "Settings": Settings,
-    "AboutConvs": AboutConvs,
-    "HowItWorks": HowItWorks,
-    "Features": Features,
-    "PrivacyPolicy": PrivacyPolicy,
-    "TermsOfService": TermsOfService,
-    "CommunityGuidelines": CommunityGuidelines,
-    "Documentation": Documentation,
-    "ApiPage": ApiPage,
     "Support": Support,
+    "TermsOfService": TermsOfService,
 }
 
 export const pagesConfig = {

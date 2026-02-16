@@ -15,15 +15,26 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(u => {
+    base44.auth.me().then(async (u) => {
       setUser(u);
-      base44.entities.User.filter({ email: u.email }).then(res => {
-        const p = res[0];
-        setProfile(p);
-        if (p) {
-          setFormData({ username: p.username || "", bio: p.bio || "" });
-        }
-      });
+      const profiles = await base44.entities.Profile.filter({ email: u.email });
+      if (profiles[0]) {
+        setProfile(profiles[0]);
+        setFormData({ username: profiles[0].username || "", bio: profiles[0].bio || "" });
+      } else {
+        // Auto-create profile on first visit
+        const newProfile = await base44.entities.Profile.create({
+          email: u.email,
+          full_name: u.full_name,
+          username: u.email.split("@")[0],
+          bio: "",
+          profile_image: "",
+          cover_image: "",
+          badges: [],
+        });
+        setProfile(newProfile);
+        setFormData({ username: newProfile.username || "", bio: "" });
+      }
     });
   }, []);
 
@@ -32,7 +43,7 @@ export default function Settings() {
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     if (profile) {
-      await base44.entities.User.update(profile.id, { [field]: file_url });
+      await base44.entities.Profile.update(profile.id, { [field]: file_url });
       setProfile({ ...profile, [field]: file_url });
     }
   };
@@ -40,9 +51,12 @@ export default function Settings() {
   const handleSave = async () => {
     setIsSaving(true);
     if (profile) {
-      await base44.entities.User.update(profile.id, formData);
+      await base44.entities.Profile.update(profile.id, {
+        username: formData.username,
+        bio: formData.bio,
+        full_name: user.full_name,
+      });
     }
-    await base44.auth.updateMe(formData);
     setIsSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

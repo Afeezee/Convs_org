@@ -29,8 +29,8 @@ export default function Home() {
   });
 
   const { data: users = [] } = useQuery({
-    queryKey: ["suggested-users"],
-    queryFn: () => base44.entities.User.list("-created_date", 10),
+    queryKey: ["suggested-profiles"],
+    queryFn: () => base44.entities.Profile.list("-created_date", 10),
   });
 
   const { data: reconvs = [] } = useQuery({

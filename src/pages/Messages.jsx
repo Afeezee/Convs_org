@@ -35,13 +35,13 @@ export default function Messages() {
     enabled: !!user,
   });
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ["all-users"],
-    queryFn: () => base44.entities.User.list("-created_date", 100),
+  // Use Profile entity for user search in new chat
+  const { data: allProfiles = [] } = useQuery({
+    queryKey: ["all-profiles-messages"],
+    queryFn: () => base44.entities.Profile.list("-created_date", 100),
     enabled: !!user,
   });
 
-  // Get unique conversations
   const conversations = React.useMemo(() => {
     if (!user) return [];
     const convMap = new Map();
@@ -95,7 +95,6 @@ export default function Messages() {
     if ((!messageText.trim() && !mediaFile) || !activeConversation) return;
     setIsSending(true);
 
-    // AI Moderation
     const modResult = await base44.integrations.Core.InvokeLLM({
       prompt: `Moderate this private message: "${messageText}". Check for harassment, threats, spam.`,
       response_json_schema: {
@@ -136,16 +135,16 @@ export default function Messages() {
     queryClient.invalidateQueries({ queryKey: ["messages"] });
   };
 
-  const handleStartNewChat = (targetUser) => {
-    const convId = [user.email, targetUser.email].sort().join("_");
+  const handleStartNewChat = (targetProfile) => {
+    const convId = [user.email, targetProfile.email].sort().join("_");
     const existing = conversations.find(c => c.id === convId);
     if (existing) {
       setActiveConversation(existing);
     } else {
       setActiveConversation({
         id: convId,
-        otherEmail: targetUser.email,
-        otherName: targetUser.full_name,
+        otherEmail: targetProfile.email,
+        otherName: targetProfile.full_name,
         lastMessage: "",
         lastMessageDate: new Date(),
         unreadCount: 0,
@@ -154,11 +153,11 @@ export default function Messages() {
     setShowNewChat(false);
   };
 
-  const filteredUsers = allUsers.filter(u =>
-    u.email !== user?.email &&
-    (u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     u.username?.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredProfiles = allProfiles.filter(p =>
+    p.email !== user?.email &&
+    (p.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     p.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     p.username?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   if (!user) {
@@ -221,7 +220,6 @@ export default function Messages() {
         <div className="convs-card flex flex-col h-full">
           {activeConversation ? (
             <>
-              {/* Chat Header */}
               <div className="p-4 border-b border-[var(--convs-border)] flex items-center gap-3">
                 <Avatar name={activeConversation.otherName} size="md" />
                 <div>
@@ -230,7 +228,6 @@ export default function Messages() {
                 </div>
               </div>
 
-              {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {activeMessages.map(msg => {
                   const isOwn = msg.sender_email === user.email;
@@ -251,7 +248,6 @@ export default function Messages() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
               <div className="p-4 border-t border-[var(--convs-border)]">
                 {mediaFile && (
                   <div className="mb-2 flex items-center gap-2 p-2 bg-[var(--convs-bg-tertiary)] rounded-lg">
@@ -301,7 +297,7 @@ export default function Messages() {
 
       {/* New Chat Modal */}
       {showNewChat && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowNewChat(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md" onClick={() => setShowNewChat(false)}>
           <div className="w-full max-w-md bg-[var(--convs-card)] rounded-2xl border border-[var(--convs-border)] p-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-[var(--convs-text)]">New Message</h3>
@@ -316,16 +312,16 @@ export default function Messages() {
               className="mb-3 bg-[var(--convs-bg-secondary)] border-[var(--convs-border)] text-[var(--convs-text)]"
             />
             <div className="max-h-96 overflow-y-auto space-y-1">
-              {filteredUsers.map(u => (
+              {filteredProfiles.map(p => (
                 <button
-                  key={u.id}
-                  onClick={() => handleStartNewChat(u)}
+                  key={p.id}
+                  onClick={() => handleStartNewChat(p)}
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--convs-bg-tertiary)] transition-colors"
                 >
-                  <Avatar name={u.full_name} size="sm" />
+                  <Avatar name={p.full_name} image={p.profile_image} size="sm" />
                   <div className="text-left">
-                    <p className="font-medium text-sm text-[var(--convs-text)]">{u.full_name}</p>
-                    <p className="text-xs text-[var(--convs-text-muted)]">@{u.username || u.email?.split("@")[0]}</p>
+                    <p className="font-medium text-sm text-[var(--convs-text)]">{p.full_name}</p>
+                    <p className="text-xs text-[var(--convs-text-muted)]">@{p.username || p.email?.split("@")[0]}</p>
                   </div>
                 </button>
               ))}

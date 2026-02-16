@@ -29,12 +29,13 @@ export default function Profile() {
     base44.auth.me().then(setCurrentUser).catch(() => {});
   }, []);
 
-  const { data: users = [], isLoading: userLoading } = useQuery({
-    queryKey: ["profile-user", profileEmail],
-    queryFn: () => base44.entities.User.filter({ email: profileEmail }),
+  // Fetch profile from Profile entity
+  const { data: profiles = [], isLoading: profileLoading } = useQuery({
+    queryKey: ["profile-data", profileEmail],
+    queryFn: () => base44.entities.Profile.filter({ email: profileEmail }),
     enabled: !!profileEmail,
   });
-  const profileUser = users[0];
+  const profileUser = profiles[0];
 
   const { data: convs = [] } = useQuery({
     queryKey: ["profile-convs", profileEmail],
@@ -60,7 +61,6 @@ export default function Profile() {
     enabled: !!profileEmail,
   });
 
-  // Fetch original convs for reconvs
   const { data: allConvs = [] } = useQuery({
     queryKey: ["all-convs-for-reconvs"],
     queryFn: () => base44.entities.Conv.list("-created_date", 200),
@@ -74,7 +74,6 @@ export default function Profile() {
     return map;
   }, [allConvs, convs]);
 
-  // Load bookmarks for current user
   useEffect(() => {
     if (!currentUser) return;
     base44.entities.Bookmark.filter({ user_email: currentUser.email }).then(bms => {
@@ -114,7 +113,7 @@ export default function Profile() {
 
   const isOwnProfile = currentUser?.email === profileEmail;
 
-  if (userLoading) {
+  if (profileLoading) {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="w-6 h-6 animate-spin text-[var(--convs-accent)]" />
@@ -259,7 +258,6 @@ export default function Profile() {
       {/* Content */}
       <div className="mt-4 space-y-3">
         {activeTab === "convs" && (() => {
-          // Merge convs and reconvs, sorted by date
           const items = [
             ...convs.map(c => ({ type: "conv", data: c, date: c.created_date })),
             ...reconvs.map(r => ({ type: "reconv", data: r, date: r.created_date })),
