@@ -308,14 +308,14 @@ export default function Landing() {
               Join the platform where ideas are tested, not attacked. 
               Where structure beats noise. Where reasoning matters.
             </p>
-            <Button
+            <button
               onClick={() => base44.auth.redirectToLogin()}
-              size="lg"
-              className="bg-[var(--convs-accent)] hover:bg-[var(--convs-accent-hover)] text-white px-10 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+              className="inline-flex items-center justify-center px-10 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+              style={{ background: "#6366F1", color: "#FFFFFF" }}
             >
               Get Started Now
               <CheckCircle className="ml-2 w-5 h-5" />
-            </Button>
+            </button>
           </motion.div>
         </div>
       </section>
