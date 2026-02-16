@@ -49,26 +49,26 @@
  */
 import ConvDetail from './pages/ConvDetail';
 import Explore from './pages/Explore';
+import FollowSuggestions from './pages/FollowSuggestions';
 import Home from './pages/Home';
+import Landing from './pages/Landing';
+import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
-import Messages from './pages/Messages';
-import FollowSuggestions from './pages/FollowSuggestions';
-import Landing from './pages/Landing';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "ConvDetail": ConvDetail,
     "Explore": Explore,
+    "FollowSuggestions": FollowSuggestions,
     "Home": Home,
+    "Landing": Landing,
+    "Messages": Messages,
     "Notifications": Notifications,
     "Profile": Profile,
     "Settings": Settings,
-    "Messages": Messages,
-    "FollowSuggestions": FollowSuggestions,
-    "Landing": Landing,
 }
 
 export const pagesConfig = {

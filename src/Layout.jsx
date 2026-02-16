@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import ThemeProvider, { useTheme } from "@/components/shared/ThemeProvider";
 import {
   Home, Search, Bell, User, Settings, Plus, Moon, Sun,
-  LogOut, Menu, X, MessageSquare
+  LogOut, Menu, X, MessageSquare, Users
 } from "lucide-react";
 import Avatar from "@/components/shared/Avatar";
 
@@ -24,6 +24,7 @@ function LayoutInner({ children, currentPageName }) {
   const navItems = [
     { icon: Home, label: "Home", page: "Home" },
     { icon: Search, label: "Explore", page: "Explore" },
+    { icon: Users, label: "Discover", page: "FollowSuggestions" },
     { icon: MessageSquare, label: "Messages", page: "Messages" },
     { icon: Bell, label: "Notifications", page: "Notifications" },
     { icon: User, label: "Profile", page: "Profile", params: user ? `?email=${user.email}` : "" },
