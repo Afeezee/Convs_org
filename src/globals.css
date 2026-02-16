@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --convs-bg: #FFFFFF;
+  --convs-bg-secondary: #F8FAFC;
+  --convs-bg-tertiary: #F1F5F9;
+  --convs-text: #0F172A;
+  --convs-text-secondary: #64748B;
+  --convs-text-muted: #94A3B8;
+  --convs-border: #E2E8F0;
+  --convs-accent: #6366F1;
+  --convs-accent-hover: #4F46E5;
+  --convs-accent-light: #EEF2FF;
+  --convs-support: #10B981;
+  --convs-oppose: #EF4444;
+  --convs-clarify: #F59E0B;
+  --convs-card: #FFFFFF;
+  --convs-card-hover: #F8FAFC;
+  --convs-sidebar: #FFFFFF;
+  --convs-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+}
+
+[data-theme="dark"] {
+  --convs-bg: #0B0F1A;
+  --convs-bg-secondary: #111827;
+  --convs-bg-tertiary: #1E293B;
+  --convs-text: #F1F5F9;
+  --convs-text-secondary: #94A3B8;
+  --convs-text-muted: #64748B;
+  --convs-border: #1E293B;
+  --convs-accent: #818CF8;
+  --convs-accent-hover: #6366F1;
+  --convs-accent-light: #1E1B4B;
+  --convs-support: #34D399;
+  --convs-oppose: #F87171;
+  --convs-clarify: #FBBF24;
+  --convs-card: #111827;
+  --convs-card-hover: #1E293B;
+  --convs-sidebar: #111827;
+  --convs-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+}
+
+body {
+  background-color: var(--convs-bg);
+  color: var(--convs-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  border-color: var(--convs-border);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--convs-text-muted);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--convs-text-secondary);
+}
+
+.convs-card {
+  background: var(--convs-card);
+  border: 1px solid var(--convs-border);
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+.convs-card:hover {
+  background: var(--convs-card-hover);
+  box-shadow: var(--convs-shadow);
+}
+
+.stance-support { color: var(--convs-support); }
+.stance-oppose { color: var(--convs-oppose); }
+.stance-clarify { color: var(--convs-clarify); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
