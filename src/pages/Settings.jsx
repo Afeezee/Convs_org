@@ -114,14 +114,15 @@ export default function Settings() {
           />
         </div>
         <div className="pt-2">
-          <Button
+          <button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-[var(--convs-accent)] hover:bg-[var(--convs-accent-hover)] text-white gap-2"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white disabled:opacity-50"
+            style={{ background: "#6366F1" }}
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saved ? "Saved!" : "Save Changes"}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
