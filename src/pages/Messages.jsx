@@ -217,10 +217,11 @@ export default function Messages() {
         </div>
 
         {/* Chat Area */}
-        <div className="convs-card flex flex-col h-full">
+        <div className="convs-card flex flex-col h-full overflow-hidden">
           {activeConversation ? (
             <>
-              <div className="p-4 border-b border-[var(--convs-border)] flex items-center gap-3">
+              {/* Chat Header - fixed */}
+              <div className="p-4 border-b border-[var(--convs-border)] flex items-center gap-3 flex-shrink-0">
                 <Avatar name={activeConversation.otherName} size="md" />
                 <div>
                   <p className="font-semibold text-[var(--convs-text)]">{activeConversation.otherName}</p>
@@ -228,17 +229,41 @@ export default function Messages() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Messages - scrollable */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ minHeight: 0 }}>
+                {activeMessages.length === 0 && (
+                  <div className="text-center py-10 text-sm text-[var(--convs-text-muted)]">
+                    No messages yet. Say hello!
+                  </div>
+                )}
                 {activeMessages.map(msg => {
                   const isOwn = msg.sender_email === user.email;
                   return (
                     <div key={msg.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[70%] ${isOwn ? "bg-[var(--convs-accent)] text-white" : "bg-[var(--convs-bg-tertiary)] text-[var(--convs-text)]"} rounded-2xl px-4 py-2`}>
+                      {!isOwn && (
+                        <div className="flex-shrink-0 mr-2 mt-auto">
+                          <Avatar name={activeConversation.otherName} size="xs" />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
+                          isOwn
+                            ? "rounded-br-md"
+                            : "rounded-bl-md"
+                        }`}
+                        style={{
+                          background: isOwn ? "#6366F1" : "var(--convs-bg-tertiary)",
+                          color: isOwn ? "#FFFFFF" : "var(--convs-text)",
+                        }}
+                      >
                         <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                         {msg.media_url && (
                           <img src={msg.media_url} alt="" className="mt-2 rounded-lg max-w-full" />
                         )}
-                        <p className={`text-[10px] mt-1 ${isOwn ? "text-white/70" : "text-[var(--convs-text-muted)]"}`}>
+                        <p
+                          className="text-[10px] mt-1"
+                          style={{ color: isOwn ? "rgba(255,255,255,0.7)" : "var(--convs-text-muted)" }}
+                        >
                           {moment(msg.created_date).format("h:mm A")}
                         </p>
                       </div>
@@ -248,7 +273,8 @@ export default function Messages() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-4 border-t border-[var(--convs-border)]">
+              {/* Input area - fixed */}
+              <div className="p-4 border-t border-[var(--convs-border)] flex-shrink-0">
                 {mediaFile && (
                   <div className="mb-2 flex items-center gap-2 p-2 bg-[var(--convs-bg-tertiary)] rounded-lg">
                     <img src={URL.createObjectURL(mediaFile)} alt="" className="w-12 h-12 rounded object-cover" />
@@ -261,26 +287,26 @@ export default function Messages() {
                 <div className="flex items-end gap-2">
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-2 rounded-lg hover:bg-[var(--convs-bg-tertiary)] transition-colors"
+                    className="p-2 rounded-lg hover:bg-[var(--convs-bg-tertiary)] transition-colors flex-shrink-0"
                   >
                     <ImageIcon className="w-5 h-5 text-[var(--convs-text-muted)]" />
                   </button>
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={e => setMediaFile(e.target.files[0])} className="hidden" />
-                  <Textarea
+                  <Input
                     value={messageText}
                     onChange={e => setMessageText(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
                     placeholder="Type a message..."
-                    rows={1}
-                    className="flex-1 resize-none bg-[var(--convs-bg-secondary)] border-[var(--convs-border)] text-[var(--convs-text)]"
+                    className="flex-1 bg-[var(--convs-bg-secondary)] border-[var(--convs-border)] text-[var(--convs-text)]"
                   />
-                  <Button
+                  <button
                     onClick={handleSendMessage}
                     disabled={(!messageText.trim() && !mediaFile) || isSending}
-                    className="bg-[var(--convs-accent)] hover:bg-[var(--convs-accent-hover)] text-white"
+                    className="p-2 rounded-lg flex-shrink-0 disabled:opacity-50"
+                    style={{ background: "#6366F1", color: "#FFFFFF" }}
                   >
-                    {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  </Button>
+                    {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
             </>
