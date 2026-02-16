@@ -155,22 +155,21 @@ export default function Landing() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <Button
+            <button
               onClick={() => base44.auth.redirectToLogin()}
-              size="lg"
-              className="bg-[var(--convs-accent)] hover:bg-[var(--convs-accent-hover)] text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+              className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+              style={{ background: "#6366F1", color: "#FFFFFF" }}
             >
               Create Account
               <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={() => base44.auth.redirectToLogin()}
-              variant="outline"
-              size="lg"
-              className="border-2 border-[var(--convs-border)] hover:border-[var(--convs-accent)] text-[var(--convs-text)] px-8 py-6 text-lg font-semibold rounded-xl transition-all"
+              className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold rounded-xl border-2 transition-all"
+              style={{ borderColor: "var(--convs-border)", color: "var(--convs-text)", background: "transparent" }}
             >
               Sign In
-            </Button>
+            </button>
           </motion.div>
 
           <motion.p
