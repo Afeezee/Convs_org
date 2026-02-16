@@ -62,19 +62,7 @@ export default function CommentItem({ comment }) {
             </a>
           )}
 
-          {comment.constructiveness_score > 0 && (
-            <div className="mt-2 flex items-center gap-1.5">
-              <div className="w-16 h-1 rounded-full bg-[var(--convs-bg-tertiary)] overflow-hidden">
-                <div
-                  className="h-full bg-[var(--convs-accent)] rounded-full transition-all"
-                  style={{ width: `${comment.constructiveness_score * 100}%` }}
-                />
-              </div>
-              <span className="text-[10px] text-[var(--convs-text-muted)]">
-                {(comment.constructiveness_score * 100).toFixed(0)}% constructive
-              </span>
-            </div>
-          )}
+
         </div>
       </div>
     </div>
