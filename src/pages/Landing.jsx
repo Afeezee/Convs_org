@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, BarChart3, MessageSquare, Quote, Zap, Target, TrendingUp,
@@ -327,25 +328,25 @@ export default function Landing() {
             <div>
               <h4 className="font-semibold text-[var(--convs-text)] mb-3">Platform</h4>
               <ul className="space-y-2 text-sm text-[var(--convs-text-muted)]">
-                <li><a href="#" className="hover:text-[var(--convs-accent)] transition-colors">About Convs</a></li>
-                <li><a href="#" className="hover:text-[var(--convs-accent)] transition-colors">How It Works</a></li>
-                <li><a href="#" className="hover:text-[var(--convs-accent)] transition-colors">Features</a></li>
+                <li><Link to={createPageUrl("AboutConvs")} className="hover:text-[var(--convs-accent)] transition-colors">About Convs</Link></li>
+                <li><Link to={createPageUrl("HowItWorks")} className="hover:text-[var(--convs-accent)] transition-colors">How It Works</Link></li>
+                <li><Link to={createPageUrl("Features")} className="hover:text-[var(--convs-accent)] transition-colors">Features</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-[var(--convs-text)] mb-3">Legal</h4>
               <ul className="space-y-2 text-sm text-[var(--convs-text-muted)]">
-                <li><a href="#" className="hover:text-[var(--convs-accent)] transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-[var(--convs-accent)] transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-[var(--convs-accent)] transition-colors">Community Guidelines</a></li>
+                <li><Link to={createPageUrl("PrivacyPolicy")} className="hover:text-[var(--convs-accent)] transition-colors">Privacy Policy</Link></li>
+                <li><Link to={createPageUrl("TermsOfService")} className="hover:text-[var(--convs-accent)] transition-colors">Terms of Service</Link></li>
+                <li><Link to={createPageUrl("CommunityGuidelines")} className="hover:text-[var(--convs-accent)] transition-colors">Community Guidelines</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-[var(--convs-text)] mb-3">Resources</h4>
               <ul className="space-y-2 text-sm text-[var(--convs-text-muted)]">
-                <li><a href="#" className="hover:text-[var(--convs-accent)] transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-[var(--convs-accent)] transition-colors">API</a></li>
-                <li><a href="#" className="hover:text-[var(--convs-accent)] transition-colors">Support</a></li>
+                <li><Link to={createPageUrl("Documentation")} className="hover:text-[var(--convs-accent)] transition-colors">Documentation</Link></li>
+                <li><Link to={createPageUrl("ApiPage")} className="hover:text-[var(--convs-accent)] transition-colors">API</Link></li>
+                <li><Link to={createPageUrl("Support")} className="hover:text-[var(--convs-accent)] transition-colors">Support</Link></li>
               </ul>
             </div>
             <div>
