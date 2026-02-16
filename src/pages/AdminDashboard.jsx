@@ -33,6 +33,12 @@ export default function AdminDashboard() {
     enabled: !!user && user.role === "admin",
   });
 
+  const { data: allProfiles = [] } = useQuery({
+    queryKey: ["admin-profiles"],
+    queryFn: () => base44.entities.Profile.list("-created_date", 200),
+    enabled: !!user && user.role === "admin",
+  });
+
   const { data: allConvs = [] } = useQuery({
     queryKey: ["admin-convs"],
     queryFn: () => base44.entities.Conv.list("-created_date", 200),
@@ -139,7 +145,7 @@ export default function AdminDashboard() {
       {activeTab === "overview" && (
         <AdminAnalytics users={allUsers} convs={allConvs} comments={allComments} />
       )}
-      {activeTab === "users" && <AdminUsers users={allUsers} />}
+      {activeTab === "users" && <AdminUsers users={allUsers} profiles={allProfiles} />}
       {activeTab === "content" && <AdminContent convs={allConvs} comments={allComments} />}
     </div>
   );

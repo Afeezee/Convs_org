@@ -9,9 +9,16 @@ import Avatar from "@/components/shared/Avatar";
 import moment from "moment";
 import { useQueryClient } from "@tanstack/react-query";
 
-export default function AdminUsers({ users }) {
+export default function AdminUsers({ users, profiles = [] }) {
   const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
+
+  // Build a map of profiles by email for display data
+  const profileByEmail = React.useMemo(() => {
+    const map = {};
+    profiles.forEach(p => { map[p.email] = p; });
+    return map;
+  }, [profiles]);
 
   const filtered = users.filter(u =>
     (u.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -59,7 +66,7 @@ export default function AdminUsers({ users }) {
                 <tr key={u.id} className="border-b border-[var(--convs-border)] last:border-0 hover:bg-[var(--convs-bg-secondary)] transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
-                      <Avatar name={u.full_name} image={u.profile_image} size="sm" />
+                      <Avatar name={u.full_name} image={profileByEmail[u.email]?.profile_image} size="sm" />
                       <span className="font-medium text-[var(--convs-text)]">{u.full_name || "—"}</span>
                     </div>
                   </td>
