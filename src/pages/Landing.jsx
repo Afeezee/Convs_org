@@ -359,7 +359,7 @@ export default function Landing() {
           </div>
           <div className="pt-8 border-t border-[var(--convs-border)] flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-[var(--convs-accent)]" />
+              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6992f6acbe5cb4f8025521fe/a8787b74f_Convs_Logo-removebg-preview.png" alt="Convs" className="w-6 h-6 object-contain" />
               <span className="font-bold text-[var(--convs-text)]">Convs</span>
             </div>
             <p className="text-sm text-[var(--convs-text-muted)]">

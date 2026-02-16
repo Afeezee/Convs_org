@@ -36,9 +36,7 @@ function LayoutInner({ children, currentPageName }) {
         <header className="sticky top-0 z-40 border-b" style={{ background: "var(--convs-sidebar)", borderColor: "var(--convs-border)" }}>
           <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
-                <span className="text-white font-bold text-sm">C</span>
-              </div>
+              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6992f6acbe5cb4f8025521fe/a8787b74f_Convs_Logo-removebg-preview.png" alt="Convs" className="w-8 h-8 object-contain" />
               <span className="text-lg font-bold tracking-tight" style={{ color: "var(--convs-text)" }}>
                 Convs
               </span>
@@ -73,9 +71,7 @@ function LayoutInner({ children, currentPageName }) {
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           {/* Logo */}
           <Link to={createPageUrl("Home")} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
-              <span className="text-white font-bold text-sm">C</span>
-            </div>
+            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6992f6acbe5cb4f8025521fe/a8787b74f_Convs_Logo-removebg-preview.png" alt="Convs" className="w-8 h-8 object-contain" />
             <span className="text-lg font-bold tracking-tight" style={{ color: "var(--convs-text)" }}>
               Convs
             </span>
