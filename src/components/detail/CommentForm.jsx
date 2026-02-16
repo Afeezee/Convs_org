@@ -19,7 +19,7 @@ const STRENGTHS = [
   "Balanced Perspective", "Credible Source", "Nuanced Analysis",
 ];
 
-export default function CommentForm({ convId, user, highlightedText, onCommented, parentCommentId }) {
+export default function CommentForm({ convId, conv, user, highlightedText, onCommented, parentCommentId }) {
   const [stance, setStance] = useState("");
   const [content, setContent] = useState("");
   const [flawTag, setFlawTag] = useState("");
@@ -72,6 +72,23 @@ Rate constructiveness 0-1, detect personal attacks, check if flaw tag matches co
       constructiveness_score: mod.constructiveness_score || 0.5,
       status: "published",
     });
+
+    // Send notification to conv author
+    if (conv && conv.author_email && conv.author_email !== user.email) {
+      base44.entities.Notification.create({
+        user_email: conv.author_email,
+        type: stance === "support" ? "support" : stance === "oppose" ? "oppose" : "comment",
+        from_email: user.email,
+        from_name: user.full_name,
+        conv_id: convId,
+        message: stance === "support"
+          ? "supported your conv"
+          : stance === "oppose"
+          ? "opposed your conv"
+          : "commented on your conv",
+        is_read: false,
+      });
+    }
 
     setContent("");
     setStance("");
