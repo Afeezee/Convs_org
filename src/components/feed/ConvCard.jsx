@@ -1,13 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { MessageSquare, Bookmark, Share2, ThumbsUp, ThumbsDown, MoreHorizontal, Repeat2 } from "lucide-react";
+import { MessageSquare, Bookmark, Share2, ThumbsUp, ThumbsDown, Repeat2 } from "lucide-react";
+import ConvMenuDropdown from "./ConvMenuDropdown";
 import Avatar from "../shared/Avatar";
 import TopicTag from "../shared/TopicTag";
 import SupportOpposeBar from "../shared/SupportOpposeBar";
 import moment from "moment";
 
-export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBookmarked, onShare, onReconv }) {
+export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBookmarked, onShare, onReconv, currentUserEmail, onEdit, onHide, onReport }) {
   const timeAgo = moment(conv.created_date).fromNow();
 
   return (
@@ -32,9 +33,13 @@ export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBook
             <h3 className="font-bold text-lg mt-1 text-[var(--convs-text)]">{conv.title}</h3>
           )}
         </div>
-        <button className="p-1.5 rounded-lg hover:bg-[var(--convs-bg-tertiary)] text-[var(--convs-text-muted)] transition-colors">
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
+        <ConvMenuDropdown
+          conv={conv}
+          isAuthor={currentUserEmail === conv.author_email}
+          onEdit={onEdit}
+          onHide={onHide}
+          onReport={onReport}
+        />
       </div>
 
       {/* Content */}
