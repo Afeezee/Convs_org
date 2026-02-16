@@ -11,12 +11,31 @@ import Avatar from "@/components/shared/Avatar";
 
 function LayoutInner({ children, currentPageName }) {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then(u => {
+      setUser(u);
+      // Ensure profile exists
+      base44.entities.Profile.filter({ email: u.email }).then(profiles => {
+        if (profiles[0]) {
+          setProfile(profiles[0]);
+        } else {
+          base44.entities.Profile.create({
+            email: u.email,
+            full_name: u.full_name,
+            username: u.email.split("@")[0],
+            bio: "",
+            profile_image: "",
+            cover_image: "",
+            badges: [],
+          }).then(setProfile);
+        }
+      });
+    }).catch(() => {});
   }, []);
 
   const isLandingPage = currentPageName === "Landing";
@@ -111,7 +130,7 @@ function LayoutInner({ children, currentPageName }) {
             {user ? (
               <div className="flex items-center gap-2">
                 <Link to={createPageUrl("Profile") + `?email=${user.email}`}>
-                  <Avatar name={user.full_name} size="sm" />
+                  <Avatar name={user.full_name} image={profile?.profile_image} size="sm" />
                 </Link>
                 <button
                   onClick={() => base44.auth.logout()}
