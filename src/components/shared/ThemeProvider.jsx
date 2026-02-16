@@ -14,6 +14,7 @@ export default function ThemeProvider({ children, initialTheme = "light" }) {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("convs-theme", theme);
   }, [theme]);
 
