@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Search, Loader2, UserPlus, UserCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -62,26 +64,25 @@ export default function FollowSuggestions() {
     }),
   ]);
 
-  const searchResults = allProfiles.filter(p => {
-    if (p.email === user?.email) return false;
-    if (!searchQuery) return false;
-    return (
-      p.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.username?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  const otherProfiles = allProfiles.filter(p => p.email !== user?.email);
 
-  const suggestions = allProfiles.filter(p => 
-    p.email !== user?.email &&
+  const searchResults = searchQuery
+    ? otherProfiles.filter(p =>
+        p.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.username?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
+  const suggestions = otherProfiles.filter(p => 
     !followingEmails.has(p.email) &&
     interactedEmails.has(p.email)
   ).slice(0, 10);
 
-  const popularProfiles = allProfiles
-    .filter(p => p.email !== user?.email && !followingEmails.has(p.email))
+  const popularProfiles = otherProfiles
+    .filter(p => !followingEmails.has(p.email))
     .sort((a, b) => (b.followers_count || 0) - (a.followers_count || 0))
-    .slice(0, 5);
+    .slice(0, 10);
 
   if (isLoading) {
     return (
@@ -91,38 +92,41 @@ export default function FollowSuggestions() {
     );
   }
 
-  const renderProfileCard = (p, showFollowState = true) => {
+  const renderProfileCard = (p) => {
     const isFollowingUser = followingEmails.has(p.email);
     return (
-      <div key={p.id} className="convs-card p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Avatar name={p.full_name} image={p.profile_image} size="md" />
-          <div>
-            <p className="font-semibold text-[var(--convs-text)]">{p.full_name}</p>
-            <p className="text-xs text-[var(--convs-text-muted)]">@{p.username || p.email?.split("@")[0]}</p>
+      <Link key={p.id} to={createPageUrl("Profile") + `?email=${p.email}`} className="block">
+        <div className="convs-card p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar name={p.full_name} image={p.profile_image} size="md" />
+            <div className="min-w-0">
+              <p className="font-semibold text-[var(--convs-text)] truncate">{p.full_name}</p>
+              <p className="text-xs text-[var(--convs-text-muted)] truncate">@{p.username || p.email?.split("@")[0]}</p>
+              {p.bio && <p className="text-xs text-[var(--convs-text-secondary)] mt-0.5 line-clamp-1">{p.bio}</p>}
+            </div>
           </div>
+          <Button
+            size="sm"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); isFollowingUser ? unfollowMutation.mutate(p.email) : followMutation.mutate(p.email); }}
+            className={isFollowingUser
+              ? "bg-[var(--convs-bg-tertiary)] text-[var(--convs-text)] hover:bg-red-50 hover:text-red-500 flex-shrink-0"
+              : "bg-[var(--convs-accent)] text-white hover:bg-[var(--convs-accent-hover)] flex-shrink-0"
+            }
+          >
+            {isFollowingUser ? (
+              <>
+                <UserCheck className="w-4 h-4 mr-1" />
+                Following
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-4 h-4 mr-1" />
+                Follow
+              </>
+            )}
+          </Button>
         </div>
-        <Button
-          size="sm"
-          onClick={() => isFollowingUser ? unfollowMutation.mutate(p.email) : followMutation.mutate(p.email)}
-          className={isFollowingUser
-            ? "bg-[var(--convs-bg-tertiary)] text-[var(--convs-text)] hover:bg-red-50 hover:text-red-500"
-            : "bg-[var(--convs-accent)] text-white hover:bg-[var(--convs-accent-hover)]"
-          }
-        >
-          {isFollowingUser ? (
-            <>
-              <UserCheck className="w-4 h-4 mr-1" />
-              Following
-            </>
-          ) : (
-            <>
-              <UserPlus className="w-4 h-4 mr-1" />
-              Follow
-            </>
-          )}
-        </Button>
-      </div>
+      </Link>
     );
   };
 
@@ -163,39 +167,7 @@ export default function FollowSuggestions() {
         <div>
           <h2 className="text-lg font-semibold text-[var(--convs-text)] mb-3">Popular Thinkers</h2>
           <div className="space-y-2">
-            {popularProfiles.map(p => (
-              <div key={p.id} className="convs-card p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar name={p.full_name} image={p.profile_image} size="md" />
-                  <div>
-                    <p className="font-semibold text-[var(--convs-text)]">{p.full_name}</p>
-                    <p className="text-xs text-[var(--convs-text-muted)]">
-                      {p.followers_count || 0} followers
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => followingEmails.has(p.email) ? unfollowMutation.mutate(p.email) : followMutation.mutate(p.email)}
-                  className={followingEmails.has(p.email)
-                    ? "bg-[var(--convs-bg-tertiary)] text-[var(--convs-text)]"
-                    : "bg-[var(--convs-accent)] text-white hover:bg-[var(--convs-accent-hover)]"
-                  }
-                >
-                  {followingEmails.has(p.email) ? (
-                    <>
-                      <UserCheck className="w-4 h-4 mr-1" />
-                      Following
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4 mr-1" />
-                      Follow
-                    </>
-                  )}
-                </Button>
-              </div>
-            ))}
+            {popularProfiles.map(p => renderProfileCard(p))}
           </div>
         </div>
       )}
