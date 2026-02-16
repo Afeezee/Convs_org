@@ -125,6 +125,15 @@ export default function Profile() {
       if (myProfiles[0]) {
         await base44.entities.Profile.update(myProfiles[0].id, { following_count: (myProfiles[0].following_count || 0) + 1 });
       }
+      // Send follow notification
+      await base44.entities.Notification.create({
+        user_email: profileEmail,
+        type: "follow",
+        from_email: currentUser.email,
+        from_name: currentUser.full_name,
+        message: "started following you",
+        is_read: false,
+      });
       setIsFollowing(true);
       queryClient.invalidateQueries({ queryKey: ["profile-data", profileEmail] });
     }
