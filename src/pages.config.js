@@ -57,6 +57,15 @@ import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import AboutConvs from './pages/AboutConvs';
+import HowItWorks from './pages/HowItWorks';
+import Features from './pages/Features';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import CommunityGuidelines from './pages/CommunityGuidelines';
+import Documentation from './pages/Documentation';
+import ApiPage from './pages/ApiPage';
+import Support from './pages/Support';
 import __Layout from './Layout.jsx';
 
 
@@ -71,6 +80,15 @@ export const PAGES = {
     "Notifications": Notifications,
     "Profile": Profile,
     "Settings": Settings,
+    "AboutConvs": AboutConvs,
+    "HowItWorks": HowItWorks,
+    "Features": Features,
+    "PrivacyPolicy": PrivacyPolicy,
+    "TermsOfService": TermsOfService,
+    "CommunityGuidelines": CommunityGuidelines,
+    "Documentation": Documentation,
+    "ApiPage": ApiPage,
+    "Support": Support,
 }
 
 export const pagesConfig = {
