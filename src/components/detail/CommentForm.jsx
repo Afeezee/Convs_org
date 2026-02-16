@@ -73,6 +73,19 @@ Rate constructiveness 0-1, detect personal attacks, check if flaw tag matches co
       status: "published",
     });
 
+    // Update conv support/oppose count
+    if (conv) {
+      if (stance === "support") {
+        await base44.entities.Conv.update(conv.id, {
+          support_count: (conv.support_count || 0) + 1,
+        });
+      } else if (stance === "oppose") {
+        await base44.entities.Conv.update(conv.id, {
+          oppose_count: (conv.oppose_count || 0) + 1,
+        });
+      }
+    }
+
     // Send notification to conv author
     if (conv && conv.author_email && conv.author_email !== user.email) {
       base44.entities.Notification.create({
