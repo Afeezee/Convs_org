@@ -1,0 +1,169 @@
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
+import ThemeProvider, { useTheme } from "@/components/shared/ThemeProvider";
+import {
+  Home, Search, Bell, User, Settings, Plus, Moon, Sun,
+  LogOut, Menu, X, MessageSquare
+} from "lucide-react";
+import Avatar from "@/components/shared/Avatar";
+
+function LayoutInner({ children, currentPageName }) {
+  const [user, setUser] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  const navItems = [
+    { icon: Home, label: "Home", page: "Home" },
+    { icon: Search, label: "Explore", page: "Explore" },
+    { icon: Bell, label: "Notifications", page: "Notifications" },
+    { icon: User, label: "Profile", page: "Profile", params: user ? `?email=${user.email}` : "" },
+  ];
+
+  return (
+    <div className="min-h-screen" style={{ background: "var(--convs-bg)" }}>
+      {/* Desktop Header */}
+      <header className="sticky top-0 z-40 border-b" style={{ background: "var(--convs-sidebar)", borderColor: "var(--convs-border)" }}>
+        <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+          {/* Logo */}
+          <Link to={createPageUrl("Home")} className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "var(--convs-accent)" }}>
+              <MessageSquare className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-lg font-bold tracking-tight" style={{ color: "var(--convs-text)" }}>
+              Convs
+            </span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map(item => {
+              const isActive = currentPageName === item.page;
+              return (
+                <Link
+                  key={item.page}
+                  to={createPageUrl(item.page) + (item.params || "")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    isActive
+                      ? "text-[var(--convs-accent)] bg-[var(--convs-accent-light)]"
+                      : "text-[var(--convs-text-secondary)] hover:text-[var(--convs-text)] hover:bg-[var(--convs-bg-tertiary)]"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl transition-colors hover:bg-[var(--convs-bg-tertiary)]"
+              style={{ color: "var(--convs-text-muted)" }}
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <Link to={createPageUrl("Profile") + `?email=${user.email}`}>
+                  <Avatar name={user.full_name} size="sm" />
+                </Link>
+                <button
+                  onClick={() => base44.auth.logout()}
+                  className="hidden md:block p-2 rounded-xl transition-colors hover:bg-[var(--convs-bg-tertiary)]"
+                  style={{ color: "var(--convs-text-muted)" }}
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => base44.auth.redirectToLogin()}
+                className="px-4 py-1.5 rounded-xl text-sm font-medium text-white transition-colors"
+                style={{ background: "var(--convs-accent)" }}
+              >
+                Sign In
+              </button>
+            )}
+
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-xl"
+              style={{ color: "var(--convs-text-muted)" }}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Nav */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t px-4 py-3 space-y-1" style={{ borderColor: "var(--convs-border)" }}>
+            {navItems.map(item => {
+              const isActive = currentPageName === item.page;
+              return (
+                <Link
+                  key={item.page}
+                  to={createPageUrl(item.page) + (item.params || "")}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    isActive
+                      ? "text-[var(--convs-accent)] bg-[var(--convs-accent-light)]"
+                      : "text-[var(--convs-text-secondary)]"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </header>
+
+      {/* Main Content */}
+      <main className="pb-20 md:pb-6">
+        {children}
+      </main>
+
+      {/* Mobile Bottom Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t flex" style={{ background: "var(--convs-sidebar)", borderColor: "var(--convs-border)" }}>
+        {navItems.map(item => {
+          const isActive = currentPageName === item.page;
+          return (
+            <Link
+              key={item.page}
+              to={createPageUrl(item.page) + (item.params || "")}
+              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-all ${
+                isActive ? "text-[var(--convs-accent)]" : "text-[var(--convs-text-muted)]"
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
+
+export default function Layout({ children, currentPageName }) {
+  return (
+    <ThemeProvider>
+      <LayoutInner currentPageName={currentPageName}>
+        {children}
+      </LayoutInner>
+    </ThemeProvider>
+  );
+}
