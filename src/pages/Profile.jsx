@@ -91,6 +91,7 @@ export default function Profile() {
       await base44.entities.Bookmark.create({ user_email: currentUser.email, conv_id: conv.id });
       setBookmarkedIds(prev => new Set(prev).add(conv.id));
     }
+    queryClient.invalidateQueries({ queryKey: ["profile-bookmarks"] });
   };
 
   useEffect(() => {
