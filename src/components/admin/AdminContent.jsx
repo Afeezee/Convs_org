@@ -74,7 +74,7 @@ export default function AdminContent({ convs, comments }) {
               className={`px-4 py-2 text-xs font-medium capitalize transition-colors ${
                 tab === t
                   ? "bg-[var(--convs-accent)] text-white"
-                  : "bg-[var(--convs-bg-secondary)] text-[var(--convs-text-secondary)]"
+                  : "bg-[var(--convs-bg-tertiary)] text-[var(--convs-text-secondary)] hover:bg-[var(--convs-border)] hover:text-[var(--convs-text)]"
               }`}
             >
               {t}
