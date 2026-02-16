@@ -27,7 +27,6 @@ function LayoutInner({ children, currentPageName }) {
     { icon: Users, label: "Discover", page: "FollowSuggestions" },
     { icon: MessageSquare, label: "Messages", page: "Messages" },
     { icon: Bell, label: "Notifications", page: "Notifications" },
-    { icon: User, label: "Profile", page: "Profile", params: user ? `?email=${user.email}` : "" },
   ];
 
   // Landing page has different layout
@@ -37,8 +36,8 @@ function LayoutInner({ children, currentPageName }) {
         <header className="sticky top-0 z-40 border-b" style={{ background: "var(--convs-sidebar)", borderColor: "var(--convs-border)" }}>
           <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "var(--convs-accent)" }}>
-                <MessageSquare className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
+                <span className="text-white font-bold text-sm">C</span>
               </div>
               <span className="text-lg font-bold tracking-tight" style={{ color: "var(--convs-text)" }}>
                 Convs
@@ -74,8 +73,8 @@ function LayoutInner({ children, currentPageName }) {
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           {/* Logo */}
           <Link to={createPageUrl("Home")} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "var(--convs-accent)" }}>
-              <MessageSquare className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600">
+              <span className="text-white font-bold text-sm">C</span>
             </div>
             <span className="text-lg font-bold tracking-tight" style={{ color: "var(--convs-text)" }}>
               Convs
