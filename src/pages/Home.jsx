@@ -62,6 +62,25 @@ export default function Home() {
       await base44.entities.Conv.update(conv.id, {
         support_count: (conv.support_count || 0) + 1,
       });
+      // Update conv author's profile support count
+      const authorProfiles = await base44.entities.Profile.filter({ email: conv.author_email });
+      if (authorProfiles[0]) {
+        await base44.entities.Profile.update(authorProfiles[0].id, {
+          support_count: (authorProfiles[0].support_count || 0) + 1,
+        });
+      }
+      // Notify conv author
+      if (conv.author_email !== user.email) {
+        base44.entities.Notification.create({
+          user_email: conv.author_email,
+          type: "support",
+          from_email: user.email,
+          from_name: user.full_name,
+          conv_id: conv.id,
+          message: "supported your conv",
+          is_read: false,
+        });
+      }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["convs"] }),
   });
@@ -78,6 +97,25 @@ export default function Home() {
       await base44.entities.Conv.update(conv.id, {
         oppose_count: (conv.oppose_count || 0) + 1,
       });
+      // Update conv author's profile oppose count
+      const authorProfiles = await base44.entities.Profile.filter({ email: conv.author_email });
+      if (authorProfiles[0]) {
+        await base44.entities.Profile.update(authorProfiles[0].id, {
+          oppose_count: (authorProfiles[0].oppose_count || 0) + 1,
+        });
+      }
+      // Notify conv author
+      if (conv.author_email !== user.email) {
+        base44.entities.Notification.create({
+          user_email: conv.author_email,
+          type: "oppose",
+          from_email: user.email,
+          from_name: user.full_name,
+          conv_id: conv.id,
+          message: "opposed your conv",
+          is_read: false,
+        });
+      }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["convs"] }),
   });

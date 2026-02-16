@@ -11,6 +11,8 @@ import CommentForm from "@/components/detail/CommentForm";
 import CommentItem from "@/components/detail/CommentItem";
 import ConvAnalytics from "@/components/detail/ConvAnalytics";
 import ShareModal from "@/components/feed/ShareModal";
+import EditConvModal from "@/components/feed/EditConvModal";
+import ConvMenuDropdown from "@/components/feed/ConvMenuDropdown";
 import moment from "moment";
 
 export default function ConvDetail() {
@@ -20,6 +22,7 @@ export default function ConvDetail() {
   const [highlightedText, setHighlightedText] = useState("");
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [editConv, setEditConv] = useState(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -143,6 +146,13 @@ export default function ConvDetail() {
                 >
                   <Share2 className="w-4 h-4" />
                 </button>
+                <ConvMenuDropdown
+                  conv={conv}
+                  isAuthor={user?.email === conv.author_email}
+                  onEdit={(c) => setEditConv(c)}
+                  onHide={() => {}}
+                  onReport={() => {}}
+                />
               </div>
             </div>
 
@@ -257,6 +267,12 @@ export default function ConvDetail() {
         </aside>
       </div>
       <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} conv={conv} />
+      <EditConvModal
+        isOpen={!!editConv}
+        onClose={() => setEditConv(null)}
+        conv={editConv}
+        onUpdated={() => queryClient.invalidateQueries({ queryKey: ["conv", convId] })}
+      />
     </div>
   );
 }
