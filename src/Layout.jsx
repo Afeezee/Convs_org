@@ -19,12 +19,51 @@ function LayoutInner({ children, currentPageName }) {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
+  const isLandingPage = currentPageName === "Landing";
+
   const navItems = [
     { icon: Home, label: "Home", page: "Home" },
     { icon: Search, label: "Explore", page: "Explore" },
     { icon: Bell, label: "Notifications", page: "Notifications" },
     { icon: User, label: "Profile", page: "Profile", params: user ? `?email=${user.email}` : "" },
   ];
+
+  // Landing page has different layout
+  if (isLandingPage) {
+    return (
+      <div className="min-h-screen" style={{ background: "var(--convs-bg)" }}>
+        <header className="sticky top-0 z-40 border-b" style={{ background: "var(--convs-sidebar)", borderColor: "var(--convs-border)" }}>
+          <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "var(--convs-accent)" }}>
+                <MessageSquare className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-lg font-bold tracking-tight" style={{ color: "var(--convs-text)" }}>
+                Convs
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-xl transition-colors hover:bg-[var(--convs-bg-tertiary)]"
+                style={{ color: "var(--convs-text-muted)" }}
+              >
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
+                className="px-4 py-1.5 rounded-xl text-sm font-medium text-white transition-colors"
+                style={{ background: "var(--convs-accent)" }}
+              >
+                Sign In
+              </button>
+            </div>
+          </div>
+        </header>
+        <main>{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ background: "var(--convs-bg)" }}>
