@@ -127,18 +127,20 @@ Return JSON:`,
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-full max-w-lg bg-[var(--convs-card)] rounded-2xl shadow-2xl border border-[var(--convs-border)] overflow-hidden"
+          className="relative w-full max-w-lg bg-[var(--convs-card)] rounded-2xl shadow-2xl border border-[var(--convs-border)] flex flex-col max-h-[90vh]"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-[var(--convs-border)]">
+          <div className="flex items-center justify-between p-4 border-b border-[var(--convs-border)] flex-shrink-0">
             <h2 className="text-lg font-bold text-[var(--convs-text)]">Create Conv</h2>
             <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[var(--convs-bg-tertiary)] transition-colors">
               <X className="w-5 h-5 text-[var(--convs-text-muted)]" />
             </button>
           </div>
 
-          {/* Type Selector */}
-          <div className="flex gap-2 p-4 pb-0">
+          {/* Scrollable Content */}
+          <div className="overflow-y-auto flex-1">
+            {/* Type Selector */}
+            <div className="flex gap-2 p-4 pb-0">
             {TYPES.map(t => (
               <button
                 key={t.key}
@@ -216,8 +218,10 @@ Return JSON:`,
             )}
           </div>
 
+          </div>
+
           {/* Footer */}
-          <div className="flex justify-end gap-2 p-4 border-t border-[var(--convs-border)]">
+          <div className="flex justify-end gap-2 p-4 border-t border-[var(--convs-border)] flex-shrink-0 bg-[var(--convs-card)]">
             <Button variant="ghost" onClick={onClose} className="text-[var(--convs-text-secondary)]">
               Cancel
             </Button>

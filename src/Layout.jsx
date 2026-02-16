@@ -24,6 +24,7 @@ function LayoutInner({ children, currentPageName }) {
   const navItems = [
     { icon: Home, label: "Home", page: "Home" },
     { icon: Search, label: "Explore", page: "Explore" },
+    { icon: MessageSquare, label: "Messages", page: "Messages" },
     { icon: Bell, label: "Notifications", page: "Notifications" },
     { icon: User, label: "Profile", page: "Profile", params: user ? `?email=${user.email}` : "" },
   ];
