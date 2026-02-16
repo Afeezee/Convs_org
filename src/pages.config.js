@@ -56,6 +56,7 @@ import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import AdminDashboard from './pages/AdminDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -69,6 +70,7 @@ export const PAGES = {
     "Notifications": Notifications,
     "Profile": Profile,
     "Settings": Settings,
+    "AdminDashboard": AdminDashboard,
 }
 
 export const pagesConfig = {
