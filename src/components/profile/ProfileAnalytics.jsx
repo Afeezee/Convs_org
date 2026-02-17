@@ -1,8 +1,32 @@
 import React from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { BarChart3, MessageSquare, ThumbsUp, ThumbsDown, TrendingUp } from "lucide-react";
+import { BarChart3, MessageSquare, ThumbsUp, ThumbsDown, TrendingUp, Star } from "lucide-react";
 
 export default function ProfileAnalytics({ convs = [], comments = [], profileUser }) {
+  // Fetch star ratings received on this user's comments
+  const commentIds = comments.map(c => c.id);
+  const { data: allRatings = [] } = useQuery({
+    queryKey: ["profile-comment-ratings", profileUser?.email],
+    queryFn: async () => {
+      if (commentIds.length === 0) return [];
+      const ratings = await Promise.all(
+        commentIds.map(id => base44.entities.CommentRating.filter({ comment_id: id }))
+      );
+      return ratings.flat();
+    },
+    enabled: commentIds.length > 0,
+  });
+
+  const totalStarRatings = allRatings.length;
+  const avgStarRating = totalStarRatings > 0
+    ? Math.round((allRatings.reduce((sum, r) => sum + (r.rating || 0), 0) / totalStarRatings) * 10) / 10
+    : 0;
+  const starDistribution = [5, 4, 3, 2, 1].map(star => ({
+    star,
+    count: allRatings.filter(r => r.rating === star).length,
+  }));
   const totalConvs = convs.length;
   
   // Aggregate support/oppose across all user's convs
@@ -161,6 +185,41 @@ export default function ProfileAnalytics({ convs = [], comments = [], profileUse
                 #{topic} ({count})
               </span>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Star Ratings Received */}
+      {totalStarRatings > 0 && (
+        <div className="convs-card p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+            <h3 className="font-bold text-sm text-[var(--convs-text)]">Comment Ratings Received</h3>
+          </div>
+          <div className="flex items-center gap-4 mb-3">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-amber-500">{avgStarRating}</p>
+              <div className="flex items-center gap-0.5 mt-1">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star key={s} className={`w-3 h-3 ${s <= Math.round(avgStarRating) ? "text-amber-400 fill-amber-400" : "text-[var(--convs-text-muted)]"}`} />
+                ))}
+              </div>
+              <p className="text-[10px] text-[var(--convs-text-muted)] mt-1">{totalStarRatings} ratings</p>
+            </div>
+            <div className="flex-1 space-y-1">
+              {starDistribution.map(({ star, count }) => (
+                <div key={star} className="flex items-center gap-2 text-xs">
+                  <span className="w-3 text-[var(--convs-text-muted)]">{star}</span>
+                  <div className="flex-1 h-2 rounded-full bg-[var(--convs-bg-tertiary)] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-amber-400"
+                      style={{ width: `${totalStarRatings > 0 ? (count / totalStarRatings) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="w-6 text-right text-[var(--convs-text-muted)]">{count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

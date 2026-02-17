@@ -254,7 +254,7 @@ export default function ConvDetail() {
                 No arguments yet. Be the first to respond.
               </div>
             ) : (
-              comments.map(c => <CommentItem key={c.id} comment={c} />)
+              comments.map(c => <CommentItem key={c.id} comment={c} currentUserEmail={user?.email} />)
             )}
           </div>
         </div>
