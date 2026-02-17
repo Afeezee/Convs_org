@@ -8,15 +8,17 @@ export default function ProfileAnalytics({ convs = [], comments = [], profileUse
   // Fetch star ratings received on this user's comments
   const commentIds = comments.map(c => c.id);
   const { data: allRatings = [] } = useQuery({
-    queryKey: ["profile-comment-ratings", profileUser?.email],
+    queryKey: ["profile-comment-ratings", profileUser?.email, commentIds.join(",")],
     queryFn: async () => {
       if (commentIds.length === 0) return [];
-      const ratings = await Promise.all(
-        commentIds.map(id => base44.entities.CommentRating.filter({ comment_id: id }))
-      );
-      return ratings.flat();
+      const results = [];
+      for (const id of commentIds) {
+        const ratings = await base44.entities.CommentRating.filter({ comment_id: id });
+        results.push(...ratings);
+      }
+      return results;
     },
-    enabled: commentIds.length > 0,
+    enabled: comments.length > 0,
   });
 
   const totalStarRatings = allRatings.length;
@@ -189,40 +191,45 @@ export default function ProfileAnalytics({ convs = [], comments = [], profileUse
         </div>
       )}
 
-      {/* Star Ratings Received */}
-      {totalStarRatings > 0 && (
-        <div className="convs-card p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-            <h3 className="font-bold text-sm text-[var(--convs-text)]">Comment Ratings Received</h3>
-          </div>
-          <div className="flex items-center gap-4 mb-3">
-            <div className="text-center">
+      {/* Starred Comments */}
+      <div className="convs-card p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+          <h3 className="font-bold text-sm text-[var(--convs-text)]">Starred Comments</h3>
+        </div>
+        {totalStarRatings > 0 ? (
+          <div className="flex items-center gap-4">
+            <div className="text-center min-w-[70px]">
               <p className="text-2xl font-bold text-amber-500">{avgStarRating}</p>
-              <div className="flex items-center gap-0.5 mt-1">
+              <div className="flex items-center justify-center gap-0.5 mt-1">
                 {[1, 2, 3, 4, 5].map(s => (
                   <Star key={s} className={`w-3 h-3 ${s <= Math.round(avgStarRating) ? "text-amber-400 fill-amber-400" : "text-[var(--convs-text-muted)]"}`} />
                 ))}
               </div>
-              <p className="text-[10px] text-[var(--convs-text-muted)] mt-1">{totalStarRatings} ratings</p>
+              <p className="text-[10px] text-[var(--convs-text-muted)] mt-1">{totalStarRatings} total</p>
             </div>
-            <div className="flex-1 space-y-1">
+            <div className="flex-1 space-y-1.5">
               {starDistribution.map(({ star, count }) => (
                 <div key={star} className="flex items-center gap-2 text-xs">
-                  <span className="w-3 text-[var(--convs-text-muted)]">{star}</span>
-                  <div className="flex-1 h-2 rounded-full bg-[var(--convs-bg-tertiary)] overflow-hidden">
+                  <div className="flex items-center gap-0.5 w-12 justify-end">
+                    <span className="text-[var(--convs-text-secondary)] font-medium">{star}</span>
+                    <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  </div>
+                  <div className="flex-1 h-2.5 rounded-full bg-[var(--convs-bg-tertiary)] overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-amber-400"
-                      style={{ width: `${totalStarRatings > 0 ? (count / totalStarRatings) * 100 : 0}%` }}
+                      className="h-full rounded-full bg-amber-400 transition-all"
+                      style={{ width: `${(count / totalStarRatings) * 100}%` }}
                     />
                   </div>
-                  <span className="w-6 text-right text-[var(--convs-text-muted)]">{count}</span>
+                  <span className="w-8 text-right text-[var(--convs-text-secondary)] font-medium">{count}</span>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-xs text-[var(--convs-text-muted)] text-center py-4">No comment ratings yet</p>
+        )}
+      </div>
 
       {totalConvs === 0 && totalStances === 0 && (
         <div className="convs-card p-6 text-center text-[var(--convs-text-muted)] text-sm">
