@@ -143,8 +143,8 @@ function LayoutInner({ children, currentPageName }) {
             ) : (
               <button
                 onClick={() => base44.auth.redirectToLogin()}
-                className="px-4 py-1.5 rounded-xl text-sm font-medium text-white transition-colors"
-                style={{ background: "var(--convs-accent)" }}
+                className="px-4 py-1.5 rounded-xl text-sm font-medium transition-colors"
+                style={{ background: "#6366F1", color: "#FFFFFF" }}
               >
                 Sign In
               </button>
