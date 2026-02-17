@@ -30,7 +30,7 @@ export default function Explore() {
   });
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
+    <div className="max-w-3xl mx-auto px-4 py-6 overflow-x-hidden">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--convs-text)] mb-1">Explore</h1>
