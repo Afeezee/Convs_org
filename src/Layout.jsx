@@ -97,25 +97,27 @@ function LayoutInner({ children, currentPageName }) {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1 flex-wrap">
-            {navItems.map(item => {
-              const isActive = currentPageName === item.page;
-              return (
-                <Link
-                  key={item.page}
-                  to={createPageUrl(item.page) + (item.params || "")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                    isActive
-                      ? "text-[var(--convs-accent)] bg-[var(--convs-accent-light)]"
-                      : "text-[var(--convs-text-secondary)] hover:text-[var(--convs-text)] hover:bg-[var(--convs-bg-tertiary)]"
-                  }`}
-                >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          {user && (
+            <nav className="hidden md:flex items-center gap-1 flex-wrap">
+              {navItems.map(item => {
+                const isActive = currentPageName === item.page;
+                return (
+                  <Link
+                    key={item.page}
+                    to={createPageUrl(item.page) + (item.params || "")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? "text-[var(--convs-accent)] bg-[var(--convs-accent-light)]"
+                        : "text-[var(--convs-text-secondary)] hover:text-[var(--convs-text)] hover:bg-[var(--convs-bg-tertiary)]"
+                    }`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
@@ -151,18 +153,20 @@ function LayoutInner({ children, currentPageName }) {
             )}
 
             {/* Mobile menu button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl"
-              style={{ color: "var(--convs-text-muted)" }}
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            {user && (
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-xl"
+                style={{ color: "var(--convs-text-muted)" }}
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            )}
           </div>
         </div>
 
         {/* Mobile Nav */}
-        {mobileMenuOpen && (
+        {mobileMenuOpen && user && (
           <div className="md:hidden border-t px-4 py-3 space-y-1" style={{ borderColor: "var(--convs-border)" }}>
             {navItems.map(item => {
               const isActive = currentPageName === item.page;
@@ -192,23 +196,23 @@ function LayoutInner({ children, currentPageName }) {
       </main>
 
       {/* Mobile Bottom Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t flex backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)" }}>
-        {navItems.map(item => {
-          const isActive = currentPageName === item.page;
-          return (
-            <Link
-              key={item.page}
-              to={createPageUrl(item.page) + (item.params || "")}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-all ${
-                isActive ? "text-[var(--convs-accent)]" : "text-[var(--convs-text-muted)]"
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </Link>
-          );
-        })}
-        {user && (
+      {user && (
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t flex backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)" }}>
+          {navItems.map(item => {
+            const isActive = currentPageName === item.page;
+            return (
+              <Link
+                key={item.page}
+                to={createPageUrl(item.page) + (item.params || "")}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-all ${
+                  isActive ? "text-[var(--convs-accent)]" : "text-[var(--convs-text-muted)]"
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                {item.label}
+              </Link>
+            );
+          })}
           <button
             onClick={() => base44.auth.logout(createPageUrl("Landing"))}
             className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium text-[var(--convs-text-muted)] transition-all"
@@ -216,8 +220,8 @@ function LayoutInner({ children, currentPageName }) {
             <LogOut className="w-5 h-5" />
             Sign Out
           </button>
-        )}
-      </nav>
+        </nav>
+      )}
     </div>
   );
 }
