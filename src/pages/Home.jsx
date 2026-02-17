@@ -11,6 +11,7 @@ import ReportConvModal from "@/components/feed/ReportConvModal";
 import ShareModal from "@/components/feed/ShareModal";
 import ReconvModal from "@/components/feed/ReconvModal";
 import ReconvCard from "@/components/feed/ReconvCard";
+import SignInPrompt from "@/components/feed/SignInPrompt";
 
 export default function Home() {
   const [feedTab, setFeedTab] = useState("trending");
@@ -200,25 +201,31 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         {/* Main Feed */}
         <div>
-          {/* Create Button */}
-          <div className="mb-4">
-            <button
-              onClick={() => setShowCreate(true)}
-              className="w-full convs-card p-4 flex items-center gap-3 text-left group"
-            >
-              <div className="w-10 h-10 rounded-full bg-[var(--convs-accent-light)] flex items-center justify-center">
-                <Plus className="w-5 h-5 text-[var(--convs-accent)]" />
-              </div>
-              <span className="text-[var(--convs-text-muted)] text-sm group-hover:text-[var(--convs-text-secondary)] transition-colors">
-                Start a new Conv — share your claim...
-              </span>
-            </button>
-          </div>
+          {!user && <SignInPrompt />}
 
-          <FeedTabs active={feedTab} onChange={setFeedTab} />
+          {user && (
+            <>
+              {/* Create Button */}
+              <div className="mb-4">
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="w-full convs-card p-4 flex items-center gap-3 text-left group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[var(--convs-accent-light)] flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-[var(--convs-accent)]" />
+                  </div>
+                  <span className="text-[var(--convs-text-muted)] text-sm group-hover:text-[var(--convs-text-secondary)] transition-colors">
+                    Start a new Conv — share your claim...
+                  </span>
+                </button>
+              </div>
+
+              <FeedTabs active={feedTab} onChange={setFeedTab} />
+            </>
+          )}
 
           {/* Conv List */}
-          <div className="space-y-3 mt-4">
+          <div className={`space-y-3 ${user ? "mt-4" : "mt-0"}`}>
             {isLoading ? (
               <div className="flex justify-center py-20">
                 <Loader2 className="w-6 h-6 animate-spin text-[var(--convs-accent)]" />
@@ -237,12 +244,12 @@ export default function Home() {
                       key={`reconv-${rc.id}`}
                       reconv={rc}
                       originalConv={origConv}
-                      onSupport={(c) => user && supportMutation.mutate(c)}
-                      onOppose={(c) => user && opposeMutation.mutate(c)}
-                      onBookmark={handleBookmark}
+                      onSupport={user ? (c) => supportMutation.mutate(c) : undefined}
+                      onOppose={user ? (c) => opposeMutation.mutate(c) : undefined}
+                      onBookmark={user ? handleBookmark : undefined}
                       isBookmarked={bookmarkedIds.has(origConv?.id)}
-                      onShare={(c) => setShareConv(c)}
-                      onReconv={(c) => setReconvConv(c)}
+                      onShare={user ? (c) => setShareConv(c) : undefined}
+                      onReconv={user ? (c) => setReconvConv(c) : undefined}
                     />
                   );
                 }
@@ -252,15 +259,16 @@ export default function Home() {
                     key={conv.id}
                     conv={conv}
                     currentUserEmail={user?.email}
-                    onSupport={(c) => user && supportMutation.mutate(c)}
-                    onOppose={(c) => user && opposeMutation.mutate(c)}
-                    onBookmark={handleBookmark}
+                    onSupport={user ? (c) => supportMutation.mutate(c) : undefined}
+                    onOppose={user ? (c) => opposeMutation.mutate(c) : undefined}
+                    onBookmark={user ? handleBookmark : undefined}
                     isBookmarked={bookmarkedIds.has(conv.id)}
-                    onShare={(c) => setShareConv(c)}
-                    onReconv={(c) => setReconvConv(c)}
-                    onEdit={(c) => setEditConv(c)}
-                    onHide={(c) => setHiddenIds(prev => new Set(prev).add(c.id))}
-                    onReport={(c) => setReportConv(c)}
+                    onShare={user ? (c) => setShareConv(c) : undefined}
+                    onReconv={user ? (c) => setReconvConv(c) : undefined}
+                    onEdit={user ? (c) => setEditConv(c) : undefined}
+                    onHide={user ? (c) => setHiddenIds(prev => new Set(prev).add(c.id)) : undefined}
+                    onReport={user ? (c) => setReportConv(c) : undefined}
+                    readOnly={!user}
                   />
                 );
               })
