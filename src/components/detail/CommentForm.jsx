@@ -85,7 +85,9 @@ Provide transparent, helpful feedback explaining your decision so the user under
       return;
     }
     if (mod.action === "warn") {
-      setModerationMsg(mod.feedback_message);
+      setModerationMsg(mod.feedback_message + "\n\nPlease revise your comment with more context and evidence before posting.");
+      setIsSubmitting(false);
+      return;
     }
 
     await base44.entities.Comment.create({
