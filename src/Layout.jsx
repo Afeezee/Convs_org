@@ -133,7 +133,7 @@ function LayoutInner({ children, currentPageName }) {
                   <Avatar name={user.full_name} image={profile?.profile_image} size="sm" />
                 </Link>
                 <button
-                  onClick={() => base44.auth.logout()}
+                  onClick={() => base44.auth.logout(createPageUrl("Landing"))}
                   className="hidden md:block p-2 rounded-xl transition-colors hover:bg-[var(--convs-bg-tertiary)]"
                   style={{ color: "var(--convs-text-muted)" }}
                 >
@@ -210,7 +210,7 @@ function LayoutInner({ children, currentPageName }) {
         })}
         {user && (
           <button
-            onClick={() => base44.auth.logout()}
+            onClick={() => base44.auth.logout(createPageUrl("Landing"))}
             className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium text-[var(--convs-text-muted)] transition-all"
           >
             <LogOut className="w-5 h-5" />
