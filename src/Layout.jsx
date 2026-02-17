@@ -191,7 +191,7 @@ function LayoutInner({ children, currentPageName }) {
       </header>
 
       {/* Main Content */}
-      <main className="pb-20 md:pb-6">
+      <main className={`${user ? "pb-20" : "pb-6"} md:pb-6`}>
         {children}
       </main>
 
