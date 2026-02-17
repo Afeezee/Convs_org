@@ -142,7 +142,7 @@ function LayoutInner({ children, currentPageName }) {
               </div> :
 
             <button
-              onClick={() => base44.auth.redirectToLogin()} className="text-slate-950 px-4 py-1.5 text-sm font-medium rounded-xl transition-colors"
+              onClick={() => base44.auth.redirectToLogin()} className="bg-purple-500 text-slate-950 px-4 py-1.5 text-sm font-medium rounded-xl transition-colors"
 
               style={{ background: "var(--convs-accent)" }}>
 
