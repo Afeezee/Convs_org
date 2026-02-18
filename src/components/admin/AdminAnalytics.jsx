@@ -1,5 +1,8 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { Hash } from "lucide-react";
 import moment from "moment";
 
 const COLORS = ["#6366F1", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
@@ -19,13 +22,14 @@ export default function AdminAnalytics({ users, convs, comments }) {
   }, {});
   const stanceData = Object.entries(stanceCounts).map(([name, value]) => ({ name, value }));
 
-  // Top topics
+  // Top topics (expanded for admin)
   const topicCounts = {};
   convs.forEach(c => (c.topics || []).forEach(t => { topicCounts[t] = (topicCounts[t] || 0) + 1; }));
   const topTopics = Object.entries(topicCounts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
+    .slice(0, 15)
     .map(([name, count]) => ({ name, count }));
+  const maxTopicCount = topTopics.length > 0 ? topTopics[0].count : 1;
 
   // Top contributors
   const authorCounts = {};
@@ -79,19 +83,37 @@ export default function AdminAnalytics({ users, convs, comments }) {
 
         {/* Top Topics */}
         <div className="convs-card p-5">
-          <h3 className="text-sm font-semibold text-[var(--convs-text)] mb-4">Top Topics</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <Hash className="w-4 h-4 text-[var(--convs-accent)]" />
+            <h3 className="text-sm font-semibold text-[var(--convs-text)]">Top Hashtags</h3>
+            <span className="text-[10px] text-[var(--convs-text-muted)] ml-auto">{Object.keys(topicCounts).length} total</span>
+          </div>
           {topTopics.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {topTopics.map((t, i) => (
-                <div key={t.name} className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-[var(--convs-text-muted)] w-4">{i + 1}</span>
-                  <span className="text-sm font-medium text-[var(--convs-text)] flex-1">#{t.name}</span>
-                  <span className="text-xs text-[var(--convs-text-muted)] px-2 py-0.5 rounded-full bg-[var(--convs-bg-tertiary)]">{t.count}</span>
-                </div>
+                <Link
+                  key={t.name}
+                  to={createPageUrl("Explore") + `?topic=${encodeURIComponent(t.name)}`}
+                  className="flex items-center gap-3 group"
+                >
+                  <span className="text-xs font-bold text-[var(--convs-text-muted)] w-5 text-right">{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-[var(--convs-text)] group-hover:text-[var(--convs-accent)] transition-colors">#{t.name}</span>
+                      <span className="text-xs text-[var(--convs-text-muted)]">{t.count} conv{t.count !== 1 ? "s" : ""}</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-[var(--convs-bg-tertiary)] overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-[var(--convs-accent)] transition-all"
+                        style={{ width: `${(t.count / maxTopicCount) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-[var(--convs-text-muted)] text-center py-8">No topics yet</p>
+            <p className="text-sm text-[var(--convs-text-muted)] text-center py-8">No hashtags yet</p>
           )}
         </div>
       </div>

@@ -6,18 +6,33 @@ import { Input } from "@/components/ui/input";
 import ConvCard from "@/components/feed/ConvCard";
 import TopicTag from "@/components/shared/TopicTag";
 
-const POPULAR_TOPICS = ["AI", "Philosophy", "Technology", "Politics", "Health", "Science", "Economics", "Psychology", "Ethics", "Climate"];
-
 export default function Explore() {
   const params = new URLSearchParams(window.location.search);
   const initialTopic = params.get("topic") || "";
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTopic, setActiveTopic] = useState(initialTopic);
 
+  // Sync activeTopic when URL changes
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const t = urlParams.get("topic") || "";
+    setActiveTopic(t);
+  }, [window.location.search]);
+
   const { data: convs = [], isLoading } = useQuery({
     queryKey: ["explore-convs"],
-    queryFn: () => base44.entities.Conv.list("-created_date", 100),
+    queryFn: () => base44.entities.Conv.list("-created_date", 200),
   });
+
+  // Compute trending topics from actual data
+  const trendingTopics = React.useMemo(() => {
+    const counts = {};
+    convs.forEach(c => (c.topics || []).forEach(t => { counts[t] = (counts[t] || 0) + 1; }));
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([name]) => name);
+  }, [convs]);
 
   const filteredConvs = convs.filter(c => {
     const matchesSearch = !searchQuery ||
@@ -48,6 +63,21 @@ export default function Explore() {
         />
       </div>
 
+      {/* Active topic header */}
+      {activeTopic && (
+        <div className="mb-4 p-4 rounded-xl bg-[var(--convs-accent-light)] border border-[var(--convs-accent)]/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-[var(--convs-text-muted)] uppercase tracking-wider mb-0.5">Showing results for</p>
+              <h2 className="text-lg font-bold text-[var(--convs-accent)]">#{activeTopic}</h2>
+            </div>
+            <span className="text-sm text-[var(--convs-text-secondary)]">
+              {filteredConvs.length} conv{filteredConvs.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Topics */}
       <div className="flex flex-wrap gap-2 mb-6">
         <TopicTag
@@ -55,12 +85,12 @@ export default function Explore() {
           active={!activeTopic}
           onClick={() => setActiveTopic("")}
         />
-        {POPULAR_TOPICS.map(t => (
+        {trendingTopics.map(t => (
           <TopicTag
             key={t}
             topic={t}
-            active={activeTopic === t}
-            onClick={() => setActiveTopic(activeTopic === t ? "" : t)}
+            active={activeTopic.toLowerCase() === t.toLowerCase()}
+            onClick={() => setActiveTopic(activeTopic.toLowerCase() === t.toLowerCase() ? "" : t)}
           />
         ))}
       </div>
