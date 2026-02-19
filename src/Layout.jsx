@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import ThemeProvider, { useTheme } from "@/components/shared/ThemeProvider";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Home, Search, Bell, User, Settings, Plus, Moon, Sun,
   LogOut, Menu, X, MessageSquare, Users
@@ -192,7 +193,17 @@ function LayoutInner({ children, currentPageName }) {
 
       {/* Main Content */}
       <main className={`${user ? "pb-20" : "pb-6"} md:pb-6`}>
-        {children}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPageName}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Mobile Bottom Bar */}
@@ -200,22 +211,31 @@ function LayoutInner({ children, currentPageName }) {
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t flex backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)", paddingBottom: "env(safe-area-inset-bottom)" }}>
           {navItems.map(item => {
             const isActive = currentPageName === item.page;
+            const targetUrl = createPageUrl(item.page) + (item.params || "");
             return (
-              <Link
+              <button
                 key={item.page}
-                to={createPageUrl(item.page) + (item.params || "")}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium transition-all ${
+                onClick={() => {
+                  if (isActive) {
+                    // Reset to root page — force navigation even if already on it
+                    navigate(targetUrl, { replace: true });
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    navigate(targetUrl);
+                  }
+                }}
+                className={`flex-1 flex flex-col items-center gap-0.5 min-h-[44px] py-2.5 text-[10px] font-medium transition-all ${
                   isActive ? "text-[var(--convs-accent)]" : "text-[var(--convs-text-muted)]"
                 }`}
               >
                 <item.icon className="w-5 h-5" />
                 {item.label}
-              </Link>
+              </button>
             );
           })}
           <button
             onClick={() => base44.auth.logout(createPageUrl("Landing"))}
-            className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium text-[var(--convs-text-muted)] transition-all"
+            className="flex-1 flex flex-col items-center gap-0.5 min-h-[44px] py-2.5 text-[10px] font-medium text-[var(--convs-text-muted)] transition-all"
           >
             <LogOut className="w-5 h-5" />
             Sign Out
