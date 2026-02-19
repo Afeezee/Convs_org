@@ -86,7 +86,6 @@ export default function Home() {
 
   const supportMutation = useMutation({
     mutationFn: async (conv) => {
-      // Moderate quick support
       const mod = await base44.integrations.Core.InvokeLLM({
         prompt: `You are a moderation AI. A user is quick-supporting a conv. This is a standard platform action, not a written comment. Always approve unless the system is being abused. Return JSON:`,
         response_json_schema: {
@@ -96,7 +95,7 @@ export default function Home() {
           },
         },
       });
-      if (mod.action === "block") return;
+      if (mod.action === "block") throw new Error("blocked");
 
       await base44.entities.Comment.create({
         conv_id: conv.id,
@@ -108,14 +107,12 @@ export default function Home() {
       await base44.entities.Conv.update(conv.id, {
         support_count: (conv.support_count || 0) + 1,
       });
-      // Update conv author's profile support count
       const authorProfiles = await base44.entities.Profile.filter({ email: conv.author_email });
       if (authorProfiles[0]) {
         await base44.entities.Profile.update(authorProfiles[0].id, {
           support_count: (authorProfiles[0].support_count || 0) + 1,
         });
       }
-      // Notify conv author
       if (conv.author_email !== user.email) {
         base44.entities.Notification.create({
           user_email: conv.author_email,
@@ -128,7 +125,18 @@ export default function Home() {
         });
       }
     },
-    onSuccess: () => {
+    onMutate: async (conv) => {
+      await queryClient.cancelQueries({ queryKey: ["convs", feedTab] });
+      const prev = queryClient.getQueryData(["convs", feedTab]);
+      queryClient.setQueryData(["convs", feedTab], (old = []) =>
+        old.map(c => c.id === conv.id ? { ...c, support_count: (c.support_count || 0) + 1 } : c)
+      );
+      return { prev };
+    },
+    onError: (_err, _conv, context) => {
+      if (context?.prev) queryClient.setQueryData(["convs", feedTab], context.prev);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["convs"] });
       queryClient.invalidateQueries({ queryKey: ["profile-convs"] });
     },
@@ -136,7 +144,6 @@ export default function Home() {
 
   const opposeMutation = useMutation({
     mutationFn: async (conv) => {
-      // Moderate quick oppose
       const mod = await base44.integrations.Core.InvokeLLM({
         prompt: `You are a moderation AI. A user is quick-opposing a conv. This is a standard platform action, not a written comment. Always approve unless the system is being abused. Return JSON:`,
         response_json_schema: {
@@ -146,7 +153,7 @@ export default function Home() {
           },
         },
       });
-      if (mod.action === "block") return;
+      if (mod.action === "block") throw new Error("blocked");
 
       await base44.entities.Comment.create({
         conv_id: conv.id,
@@ -158,14 +165,12 @@ export default function Home() {
       await base44.entities.Conv.update(conv.id, {
         oppose_count: (conv.oppose_count || 0) + 1,
       });
-      // Update conv author's profile oppose count
       const authorProfiles = await base44.entities.Profile.filter({ email: conv.author_email });
       if (authorProfiles[0]) {
         await base44.entities.Profile.update(authorProfiles[0].id, {
           oppose_count: (authorProfiles[0].oppose_count || 0) + 1,
         });
       }
-      // Notify conv author
       if (conv.author_email !== user.email) {
         base44.entities.Notification.create({
           user_email: conv.author_email,
@@ -178,7 +183,18 @@ export default function Home() {
         });
       }
     },
-    onSuccess: () => {
+    onMutate: async (conv) => {
+      await queryClient.cancelQueries({ queryKey: ["convs", feedTab] });
+      const prev = queryClient.getQueryData(["convs", feedTab]);
+      queryClient.setQueryData(["convs", feedTab], (old = []) =>
+        old.map(c => c.id === conv.id ? { ...c, oppose_count: (c.oppose_count || 0) + 1 } : c)
+      );
+      return { prev };
+    },
+    onError: (_err, _conv, context) => {
+      if (context?.prev) queryClient.setQueryData(["convs", feedTab], context.prev);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["convs"] });
       queryClient.invalidateQueries({ queryKey: ["profile-convs"] });
     },
