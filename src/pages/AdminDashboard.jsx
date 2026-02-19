@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
   Users, FileText, BarChart3, Shield, Trash2, Eye, Ban,
@@ -17,6 +17,7 @@ import AdminReports from "@/components/admin/AdminReports";
 import moment from "moment";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
@@ -88,11 +89,9 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link to={createPageUrl("Profile") + `?email=${user.email}`}>
-            <button className="p-2 rounded-xl hover:bg-[var(--convs-bg-tertiary)]">
-              <ArrowLeft className="w-5 h-5 text-[var(--convs-text-muted)]" />
-            </button>
-          </Link>
+          <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-[var(--convs-bg-tertiary)]">
+            <ArrowLeft className="w-5 h-5 text-[var(--convs-text-muted)]" />
+          </button>
           <div>
             <h1 className="text-2xl font-bold text-[var(--convs-text)]">Admin Dashboard</h1>
             <p className="text-sm text-[var(--convs-text-muted)]">Manage users, content & analytics</p>
