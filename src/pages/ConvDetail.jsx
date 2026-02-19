@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowLeft, Loader2, Bookmark, Share2 } from "lucide-react";
 import Avatar from "@/components/shared/Avatar";
@@ -16,6 +16,7 @@ import ConvMenuDropdown from "@/components/feed/ConvMenuDropdown";
 import moment from "moment";
 
 export default function ConvDetail() {
+  const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const convId = params.get("id");
   const [user, setUser] = useState(null);
@@ -106,13 +107,13 @@ export default function ConvDetail() {
         {/* Main */}
         <div>
           {/* Back */}
-          <Link
-            to={createPageUrl("Home")}
+          <button
+            onClick={() => navigate(-1)}
             className="inline-flex items-center gap-1.5 text-sm text-[var(--convs-text-secondary)] hover:text-[var(--convs-text)] transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
-          </Link>
+          </button>
 
           {/* Conv Content */}
           <article className="convs-card p-6">

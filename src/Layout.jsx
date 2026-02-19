@@ -86,7 +86,7 @@ function LayoutInner({ children, currentPageName }) {
   return (
     <div className="min-h-screen" style={{ background: "var(--convs-bg)" }}>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-40 border-b backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)" }}>
+      <header className="sticky top-0 z-40 border-b backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)", paddingTop: "env(safe-area-inset-top)" }}>
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           {/* Logo */}
           <Link to={createPageUrl("Home")} className="flex items-center gap-2.5">
@@ -197,7 +197,7 @@ function LayoutInner({ children, currentPageName }) {
 
       {/* Mobile Bottom Bar */}
       {user && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t flex backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)" }}>
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t flex backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--convs-sidebar) 85%, transparent)", borderColor: "var(--convs-border)", paddingBottom: "env(safe-area-inset-bottom)" }}>
           {navItems.map(item => {
             const isActive = currentPageName === item.page;
             return (

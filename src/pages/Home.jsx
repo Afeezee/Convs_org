@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, RefreshCw } from "lucide-react";
 import ConvCard from "@/components/feed/ConvCard";
 import FeedTabs from "@/components/feed/FeedTabs";
 import TrendingSidebar from "@/components/feed/TrendingSidebar";
@@ -23,7 +23,40 @@ export default function Home() {
   const [editConv, setEditConv] = useState(null);
   const [reportConv, setReportConv] = useState(null);
   const [hiddenIds, setHiddenIds] = useState(new Set());
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const feedRef = useRef(null);
+  const touchStartY = useRef(0);
   const queryClient = useQueryClient();
+
+  // Pull-to-refresh
+  const handleTouchStart = useCallback((e) => {
+    if (window.scrollY === 0) {
+      touchStartY.current = e.touches[0].clientY;
+      setIsPulling(true);
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!isPulling) return;
+    const diff = e.touches[0].clientY - touchStartY.current;
+    if (diff > 0 && window.scrollY === 0) {
+      setPullDistance(Math.min(diff * 0.5, 80));
+    }
+  }, [isPulling]);
+
+  const handleTouchEnd = useCallback(async () => {
+    if (pullDistance > 60) {
+      setIsRefreshing(true);
+      setPullDistance(60);
+      await queryClient.refetchQueries({ queryKey: ["convs"] });
+      await queryClient.refetchQueries({ queryKey: ["reconvs"] });
+      setIsRefreshing(false);
+    }
+    setPullDistance(0);
+    setIsPulling(false);
+  }, [pullDistance, queryClient]);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
@@ -197,7 +230,23 @@ export default function Home() {
   }, [convs, reconvs, convsById, feedTab, hiddenIds]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 overflow-x-hidden">
+    <div
+      className="max-w-6xl mx-auto px-4 py-6 overflow-x-hidden"
+      ref={feedRef}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      <div
+        className="flex justify-center items-center overflow-hidden transition-all"
+        style={{ height: pullDistance, opacity: pullDistance / 60 }}
+      >
+        <RefreshCw className={`w-5 h-5 text-[var(--convs-accent)] ${isRefreshing ? "animate-spin" : ""}`}
+          style={{ transform: `rotate(${pullDistance * 3}deg)` }}
+        />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
         {/* Main Feed */}
         <div>

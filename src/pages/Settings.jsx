@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Save, Loader2, Camera } from "lucide-react";
+import { Save, Loader2, Camera, Trash2, AlertTriangle } from "lucide-react";
 import Avatar from "@/components/shared/Avatar";
 
 export default function Settings() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({ username: "", bio: "" });
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
@@ -124,6 +129,70 @@ export default function Settings() {
             {saved ? "Saved!" : "Save Changes"}
           </button>
         </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="convs-card p-6 mt-6 border-red-200 dark:border-red-900/50">
+        <div className="flex items-center gap-2 mb-3">
+          <AlertTriangle className="w-4 h-4 text-red-500" />
+          <h2 className="text-sm font-bold text-red-500">Danger Zone</h2>
+        </div>
+        <p className="text-xs text-[var(--convs-text-muted)] mb-4">
+          Permanently delete your account and all associated data. This action cannot be undone.
+        </p>
+        {!showDeleteConfirm ? (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-red-500 border border-red-300 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Account
+          </button>
+        ) : (
+          <div className="space-y-3 p-4 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50">
+            <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+              Type <span className="font-bold">DELETE</span> to confirm:
+            </p>
+            <Input
+              value={deleteText}
+              onChange={e => setDeleteText(e.target.value)}
+              placeholder="Type DELETE to confirm"
+              className="border-red-300 dark:border-red-800"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  if (deleteText !== "DELETE") return;
+                  setIsDeleting(true);
+                  // Delete profile
+                  if (profile) await base44.entities.Profile.delete(profile.id);
+                  // Delete user's convs
+                  const convs = await base44.entities.Conv.filter({ author_email: user.email });
+                  await Promise.all(convs.map(c => base44.entities.Conv.delete(c.id)));
+                  // Delete user's comments
+                  const comments = await base44.entities.Comment.filter({ author_email: user.email });
+                  await Promise.all(comments.map(c => base44.entities.Comment.delete(c.id)));
+                  // Delete follows
+                  const follows = await base44.entities.Follow.filter({ follower_email: user.email });
+                  await Promise.all(follows.map(f => base44.entities.Follow.delete(f.id)));
+                  // Logout
+                  base44.auth.logout("/");
+                }}
+                disabled={deleteText !== "DELETE" || isDeleting}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                Permanently Delete
+              </button>
+              <button
+                onClick={() => { setShowDeleteConfirm(false); setDeleteText(""); }}
+                className="px-4 py-2 rounded-md text-sm font-medium text-[var(--convs-text-secondary)] hover:bg-[var(--convs-bg-tertiary)] transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
