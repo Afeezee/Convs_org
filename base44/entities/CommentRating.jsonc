@@ -1,0 +1,35 @@
+{
+  "name": "CommentRating",
+  "type": "object",
+  "properties": {
+    "comment_id": {
+      "type": "string",
+      "description": "ID of the comment being rated"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who rated"
+    },
+    "rating": {
+      "type": "number",
+      "description": "Star rating 1-5"
+    }
+  },
+  "required": [
+    "comment_id",
+    "user_email",
+    "rating"
+  ],
+  "rls": {
+    "create": {
+      "data.user_email": "{{user.email}}"
+    },
+    "read": {},
+    "update": {
+      "data.user_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.user_email": "{{user.email}}"
+    }
+  }
+}

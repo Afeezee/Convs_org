@@ -1,0 +1,164 @@
+{
+  "name": "Conv",
+  "type": "object",
+  "properties": {
+    "author_email": {
+      "type": "string",
+      "description": "Email of the author"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Display name of the author"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "short",
+        "long",
+        "media"
+      ],
+      "default": "short",
+      "description": "Type of conv"
+    },
+    "title": {
+      "type": "string",
+      "description": "Optional title for the conv"
+    },
+    "content": {
+      "type": "string",
+      "description": "Main text content of the conv"
+    },
+    "rich_content": {
+      "type": "string",
+      "description": "Rich HTML content for long convs"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "URL of attached media"
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video",
+        "none"
+      ],
+      "default": "none"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Hashtags/topics"
+    },
+    "support_count": {
+      "type": "number",
+      "default": 0
+    },
+    "oppose_count": {
+      "type": "number",
+      "default": 0
+    },
+    "comment_count": {
+      "type": "number",
+      "default": 0
+    },
+    "bookmark_count": {
+      "type": "number",
+      "default": 0
+    },
+    "quality_score": {
+      "type": "number",
+      "default": 0,
+      "description": "AI-generated argument quality score 0-100"
+    },
+    "top_flaws": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Most cited flaws"
+    },
+    "top_strengths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Most cited strengths"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "published",
+        "moderated",
+        "draft"
+      ],
+      "default": "published"
+    }
+  },
+  "required": [
+    "content",
+    "author_email",
+    "author_name"
+  ],
+  "rls": {
+    "create": {
+      "data.author_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.status": "published"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "moderator"
+          }
+        },
+        {
+          "data.author_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.author_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "moderator"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.author_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "moderator"
+          }
+        }
+      ]
+    }
+  }
+}

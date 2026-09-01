@@ -1,0 +1,133 @@
+{
+  "name": "Comment",
+  "type": "object",
+  "properties": {
+    "conv_id": {
+      "type": "string",
+      "description": "ID of the parent conv"
+    },
+    "parent_comment_id": {
+      "type": "string",
+      "description": "ID of parent comment for threading"
+    },
+    "author_email": {
+      "type": "string"
+    },
+    "author_name": {
+      "type": "string"
+    },
+    "stance": {
+      "type": "string",
+      "enum": [
+        "support",
+        "oppose",
+        "clarification"
+      ],
+      "description": "The commenter's stance"
+    },
+    "content": {
+      "type": "string",
+      "description": "Comment text"
+    },
+    "highlighted_text": {
+      "type": "string",
+      "description": "Quoted/highlighted text from the conv"
+    },
+    "flaw_tag": {
+      "type": "string",
+      "description": "Selected flaw if opposing"
+    },
+    "strength_tag": {
+      "type": "string",
+      "description": "Selected strength if supporting"
+    },
+    "evidence_url": {
+      "type": "string",
+      "description": "Optional evidence link"
+    },
+    "citation": {
+      "type": "string",
+      "description": "Optional citation"
+    },
+    "constructiveness_score": {
+      "type": "number",
+      "default": 0,
+      "description": "AI-assigned score 0-1"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "published",
+        "moderated",
+        "pending"
+      ],
+      "default": "published"
+    }
+  },
+  "required": [
+    "conv_id",
+    "author_email",
+    "author_name",
+    "stance",
+    "content"
+  ],
+  "rls": {
+    "create": {
+      "data.author_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.status": "published"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "moderator"
+          }
+        },
+        {
+          "data.author_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.author_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "moderator"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.author_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "moderator"
+          }
+        }
+      ]
+    }
+  }
+}

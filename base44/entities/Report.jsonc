@@ -1,0 +1,107 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "conv_id": {
+      "type": "string",
+      "description": "ID of the reported conv"
+    },
+    "conv_title": {
+      "type": "string",
+      "description": "Title/preview of the reported conv"
+    },
+    "conv_author_name": {
+      "type": "string",
+      "description": "Author of the reported conv"
+    },
+    "conv_author_email": {
+      "type": "string",
+      "description": "Email of the reported conv author"
+    },
+    "reporter_email": {
+      "type": "string",
+      "description": "Email of the person reporting"
+    },
+    "reporter_name": {
+      "type": "string",
+      "description": "Name of the person reporting"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "hate_speech",
+        "harassment",
+        "misinformation",
+        "spam",
+        "inappropriate",
+        "other"
+      ],
+      "description": "Reason for reporting"
+    },
+    "details": {
+      "type": "string",
+      "description": "Additional details from reporter"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "reviewed",
+        "dismissed",
+        "action_taken"
+      ],
+      "default": "pending",
+      "description": "Status of the report"
+    }
+  },
+  "required": [
+    "conv_id",
+    "reporter_email",
+    "reason"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "moderator"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "moderator"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "moderator"
+          }
+        }
+      ]
+    }
+  }
+}
