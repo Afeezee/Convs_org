@@ -1,4 +1,4 @@
-import { Pool, neonConfig } from "@neondatabase/serverless";
+import { Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import * as schema from "./schema";
 import { env } from "./env";
@@ -7,10 +7,6 @@ import { env } from "./env";
 // we use the serverless Pool + `drizzle-orm/neon-serverless` for everything
 // (hooks, cascades, moderation writes). Reads share the same pool: the extra
 // round trip vs neon-http is negligible in fra1 → eu-central-1.
-
-// Vercel Edge and Node use fetch under the hood; the ws polyfill is only
-// needed if you switch to sockets. Left off intentionally.
-neonConfig.fetchConnectionCache = true;
 
 let pool: Pool | null = null;
 
