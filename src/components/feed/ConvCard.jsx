@@ -8,7 +8,7 @@ import TopicTag from "../shared/TopicTag";
 import SupportOpposeBar from "../shared/SupportOpposeBar";
 import moment from "moment";
 
-export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBookmarked, onShare, onReconv, currentUserEmail, onEdit, onHide, onReport, readOnly }) {
+export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBookmarked, onShare, onReconv, currentUserEmail, onEdit, onHide, onReport, onDelete, readOnly }) {
   const timeAgo = moment(conv.created_date).fromNow();
 
   return (
@@ -40,6 +40,7 @@ export default function ConvCard({ conv, onSupport, onOppose, onBookmark, isBook
             onEdit={onEdit}
             onHide={onHide}
             onReport={onReport}
+            onDelete={onDelete}
           />
         )}
       </div>

@@ -148,6 +148,19 @@ export default function ConvDetail() {
                   onEdit={(c) => setEditConv(c)}
                   onHide={() => {}}
                   onReport={() => {}}
+                  onDelete={async (c) => {
+                    // eslint-disable-next-line no-alert
+                    if (!window.confirm("Delete this conv permanently? This cannot be undone.")) return;
+                    try {
+                      await api.entities.Conv.delete(c.id);
+                    } catch (err) {
+                      // eslint-disable-next-line no-alert
+                      alert(err.message ?? "Delete failed.");
+                      return;
+                    }
+                    queryClient.invalidateQueries({ queryKey: ["convs"] });
+                    navigate(createPageUrl("Home"));
+                  }}
                 />
               </div>
             </div>

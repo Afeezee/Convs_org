@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { MoreHorizontal, Pencil, EyeOff, Flag } from "lucide-react";
+import { MoreHorizontal, Pencil, EyeOff, Flag, Trash2 } from "lucide-react";
 
-export default function ConvMenuDropdown({ conv, isAuthor, onEdit, onHide, onReport }) {
+export default function ConvMenuDropdown({ conv, isAuthor, onEdit, onHide, onReport, onDelete }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();
 
@@ -38,6 +38,15 @@ export default function ConvMenuDropdown({ conv, isAuthor, onEdit, onHide, onRep
               Edit Post
             </button>
           )}
+          {isAuthor && (
+            <button
+              onClick={() => { setOpen(false); onDelete?.(conv); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete Post
+            </button>
+          )}
           <button
             onClick={() => { setOpen(false); onHide?.(conv); }}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--convs-text)] hover:bg-[var(--convs-bg-tertiary)] transition-colors"
@@ -45,13 +54,15 @@ export default function ConvMenuDropdown({ conv, isAuthor, onEdit, onHide, onRep
             <EyeOff className="w-3.5 h-3.5" />
             Hide Post
           </button>
-          <button
-            onClick={() => { setOpen(false); onReport?.(conv); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
-          >
-            <Flag className="w-3.5 h-3.5" />
-            Report Post
-          </button>
+          {!isAuthor && (
+            <button
+              onClick={() => { setOpen(false); onReport?.(conv); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+            >
+              <Flag className="w-3.5 h-3.5" />
+              Report Post
+            </button>
+          )}
         </div>
         </>
       )}

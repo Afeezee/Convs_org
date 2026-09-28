@@ -81,6 +81,22 @@ export default function Profile() {
     }).catch(() => {});
   }, [currentUser]);
 
+  const handleDelete = async (conv) => {
+    if (!currentUser || conv.author_email !== currentUser.email) return;
+    // eslint-disable-next-line no-alert
+    if (!window.confirm("Delete this conv permanently? This cannot be undone.")) return;
+    try {
+      await api.entities.Conv.delete(conv.id);
+    } catch (err) {
+      // eslint-disable-next-line no-alert
+      alert(err.message ?? "Delete failed.");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["profile-convs", profileEmail] });
+    queryClient.invalidateQueries({ queryKey: ["profile-data", profileEmail] });
+    queryClient.invalidateQueries({ queryKey: ["all-convs-for-profile"] });
+  };
+
   const handleBookmark = async (conv) => {
     if (!currentUser) return;
     if (bookmarkedIds.has(conv.id)) {
@@ -297,6 +313,7 @@ export default function Profile() {
                 onShare={(c) => setShareConv(c)}
                 onReconv={(c) => setReconvConv(c)}
                 onEdit={(c) => setEditConv(c)}
+                onDelete={handleDelete}
               />
             );
           });
@@ -332,6 +349,7 @@ export default function Profile() {
                   onShare={(c) => setShareConv(c)}
                   onReconv={(c) => setReconvConv(c)}
                   onEdit={(c) => setEditConv(c)}
+                  onDelete={handleDelete}
                 />
               );
             })

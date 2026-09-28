@@ -129,6 +129,23 @@ export default function Home() {
     },
   });
 
+  const handleDelete = async (conv) => {
+    if (!user || conv.author_email !== user.email) return;
+    // eslint-disable-next-line no-alert
+    if (!window.confirm("Delete this conv permanently? This cannot be undone.")) return;
+    try {
+      await api.entities.Conv.delete(conv.id);
+    } catch (err) {
+      // eslint-disable-next-line no-alert
+      alert(err.message ?? "Delete failed.");
+      return;
+    }
+    // Hide immediately from the current feed; refetch picks up authoritative state.
+    setHiddenIds(prev => new Set(prev).add(conv.id));
+    queryClient.invalidateQueries({ queryKey: ["convs"] });
+    queryClient.invalidateQueries({ queryKey: ["reconvs"] });
+  };
+
   const handleBookmark = async (conv) => {
     if (!user) return;
     if (bookmarkedIds.has(conv.id)) {
@@ -262,6 +279,7 @@ export default function Home() {
                     onEdit={user ? (c) => setEditConv(c) : undefined}
                     onHide={user ? (c) => setHiddenIds(prev => new Set(prev).add(c.id)) : undefined}
                     onReport={user ? (c) => setReportConv(c) : undefined}
+                    onDelete={user ? handleDelete : undefined}
                     readOnly={!user}
                   />
                 );
