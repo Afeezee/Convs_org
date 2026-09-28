@@ -202,6 +202,10 @@ app.post("/entities/:entity", async (c) => {
   // Opportunistic queue drain: on every content write, nibble a couple of
   // queued moderation rows in the background. Keeps queued content moving
   // between the once-a-day Vercel cron ticks without adding user latency.
+  //
+  // Hono's `c.executionCtx` is a throwing getter when no ExecutionContext is
+  // attached (Vercel's Node runtime doesn't attach one). Wrap the whole
+  // thing in try/catch so a missing waitUntil never surfaces as a 500.
   if (entity === "Conv" || entity === "Comment" || entity === "Message") {
     const task = (async () => {
       try {
@@ -211,10 +215,14 @@ app.post("/entities/:entity", async (c) => {
         // Best-effort — never fail the user's write because a drain hiccupped.
       }
     })();
-    const ctx = (c as unknown as { executionCtx?: { waitUntil?: (p: Promise<unknown>) => void } }).executionCtx;
-    if (ctx?.waitUntil) ctx.waitUntil(task);
-    // No waitUntil available (local dev) — fire-and-forget; the Node runtime
-    // keeps it alive long enough for a 2-row drain.
+    try {
+      // Only Edge / Cloudflare Workers actually provide waitUntil; Node runtime
+      // throws on access. Fire-and-forget in every environment — Node keeps
+      // the process alive long enough for a 2-row drain in practice.
+      c.executionCtx.waitUntil(task);
+    } catch {
+      // No ExecutionContext (Vercel Node) — the promise runs on its own.
+    }
   }
 
   return c.json(toRecord(row), 201);
