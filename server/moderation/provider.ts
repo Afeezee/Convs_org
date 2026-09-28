@@ -8,8 +8,8 @@
 // provider is deliberately narrow so a swap to a fallback model is a
 // one-liner.
 
-import { env } from "../env";
-import { extractJsonObject } from "./parse";
+import { env } from "../env.js";
+import { extractJsonObject } from "./parse.js";
 
 export interface ProviderRequest {
   system: string;

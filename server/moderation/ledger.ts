@@ -8,8 +8,8 @@
 // before Groq starts returning 429.
 
 import { eq, sql } from "drizzle-orm";
-import { db, schema } from "../db";
-import { env } from "../env";
+import { db, schema } from "../db.js";
+import { env } from "../env.js";
 
 export type BudgetOutcome = { ok: true } | { ok: false; reason: string };
 

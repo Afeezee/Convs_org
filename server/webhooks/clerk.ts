@@ -8,11 +8,11 @@
 
 import type { Context } from "hono";
 import { Webhook } from "svix";
-import { env } from "../env";
-import { db, schema } from "../db";
+import { env } from "../env.js";
+import { db, schema } from "../db.js";
 import { eq } from "drizzle-orm";
-import { onUserDelete } from "../hooks";
-import { HttpError } from "../errors";
+import { onUserDelete } from "../hooks.js";
+import { HttpError } from "../errors.js";
 
 interface ClerkEvent {
   type: string;

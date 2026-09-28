@@ -2,13 +2,13 @@
 // here; the /api/[...path].ts Vercel handler forwards every request through.
 
 import { Hono } from "hono";
-import { HttpError, badRequest, notFound, unprocessable } from "./errors";
-import { loadSession, requireSession, requireAdmin, requireStaff } from "./auth";
-import { policies, EntityName, scrub } from "./policies";
-import { db, schema } from "./db";
+import { HttpError, badRequest, notFound, unprocessable } from "./errors.js";
+import { loadSession, requireSession, requireAdmin, requireStaff } from "./auth.js";
+import { policies, EntityName, scrub } from "./policies.js";
+import { db, schema } from "./db.js";
 import { and, eq, SQL } from "drizzle-orm";
 import type { PgColumn } from "drizzle-orm/pg-core";
-import { parseFilters, parseLimit, parseSort, toRecord, entityByName } from "./query";
+import { parseFilters, parseLimit, parseSort, toRecord, entityByName } from "./query.js";
 import {
   onCommentCreate,
   onCommentDelete,
@@ -21,10 +21,10 @@ import {
   onReconvCreate,
   onMessageCreate,
   onUserDelete,
-} from "./hooks";
-import { env } from "./env";
-import { handleClerkWebhook } from "./webhooks/clerk";
-import { inputs } from "./inputs";
+} from "./hooks.js";
+import { env } from "./env.js";
+import { handleClerkWebhook } from "./webhooks/clerk.js";
+import { inputs } from "./inputs.js";
 
 type Vars = { session: Awaited<ReturnType<typeof loadSession>> };
 
@@ -205,7 +205,7 @@ app.post("/entities/:entity", async (c) => {
   if (entity === "Conv" || entity === "Comment" || entity === "Message") {
     const task = (async () => {
       try {
-        const { drainModerationQueue } = await import("./moderation");
+        const { drainModerationQueue } = await import("./moderation/index.js");
         await drainModerationQueue(2);
       } catch {
         // Best-effort — never fail the user's write because a drain hiccupped.
@@ -308,14 +308,14 @@ app.post("/cron/moderation-retry", async (c) => {
   if (!secret || secret !== env().CRON_SECRET) {
     throw new HttpError(403, "forbidden", "Bad cron secret");
   }
-  const { drainModerationQueue } = await import("./moderation");
+  const { drainModerationQueue } = await import("./moderation/index.js");
   const result = await drainModerationQueue(20);
   return c.json({ ok: true, ...result });
 });
 
 // --- Uploads ---
 app.post("/upload", async (c) => {
-  const { handleUpload } = await import("./upload");
+  const { handleUpload } = await import("./upload.js");
   return handleUpload(c);
 });
 

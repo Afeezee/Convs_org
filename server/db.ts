@@ -1,7 +1,7 @@
 import { Pool } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
-import * as schema from "./schema";
-import { env } from "./env";
+import * as schema from "./schema.js";
+import { env } from "./env.js";
 
 // Drizzle's `neon-http` driver does not support interactive transactions, so
 // we use the serverless Pool + `drizzle-orm/neon-serverless` for everything

@@ -4,8 +4,8 @@
 
 import { createHash } from "node:crypto";
 import { and, eq, sql } from "drizzle-orm";
-import { db, schema } from "../db";
-import type { Verdict, Action } from "./decide";
+import { db, schema } from "../db.js";
+import type { Verdict, Action } from "./decide.js";
 
 const TTL_DAYS = 7;
 

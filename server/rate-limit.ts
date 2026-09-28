@@ -3,7 +3,7 @@
 // (`upload:<email>`, `quickvote:<email>`) and a limit-per-hour.
 
 import { and, eq, gte, sql } from "drizzle-orm";
-import { db, schema } from "./db";
+import { db, schema } from "./db.js";
 
 const WINDOW_MS = 60 * 60 * 1000; // one hour
 

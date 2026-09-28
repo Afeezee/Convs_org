@@ -7,7 +7,7 @@
 
 import { z } from "zod";
 import { FLAWS_SET, STRENGTHS_SET } from "../src/shared/tags.js";
-import type { EntityName } from "./policies";
+import type { EntityName } from "./policies.js";
 
 const url = z.string().url().max(2000).optional().nullable();
 

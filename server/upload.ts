@@ -8,10 +8,10 @@
 import type { Context } from "hono";
 import { put } from "@vercel/blob";
 import { randomBytes } from "node:crypto";
-import { requireSession } from "./auth";
-import { hitRateLimit } from "./rate-limit";
-import { badRequest, unprocessable } from "./errors";
-import { env } from "./env";
+import { requireSession } from "./auth.js";
+import { hitRateLimit } from "./rate-limit.js";
+import { badRequest, unprocessable } from "./errors.js";
+import { env } from "./env.js";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);

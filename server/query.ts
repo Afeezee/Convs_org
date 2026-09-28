@@ -4,8 +4,8 @@
 
 import { and, asc, desc, eq, SQL } from "drizzle-orm";
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
-import { policies, EntityName, EntityPolicy } from "./policies";
-import { badRequest } from "./errors";
+import { policies, EntityName, EntityPolicy } from "./policies.js";
+import { badRequest } from "./errors.js";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;

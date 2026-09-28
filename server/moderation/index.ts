@@ -3,15 +3,15 @@
 // Groq → normalise → decide. Any failure lands in the retry queue so no
 // content is lost and nothing unmoderated is ever published.
 
-import { db, schema } from "../db";
+import { db, schema } from "../db.js";
 import { eq, sql } from "drizzle-orm";
-import { prefilter } from "./prefilter";
-import { cacheLookup, cacheWrite, contentHash } from "./cache";
-import { reserve, commitUsage, refund } from "./ledger";
-import { callGroq } from "./provider";
-import { SYSTEM_PROMPT, buildUserMessage } from "./prompt";
-import { normaliseVerdict, decide, type Verdict, type Action } from "./decide";
-import { env } from "../env";
+import { prefilter } from "./prefilter.js";
+import { cacheLookup, cacheWrite, contentHash } from "./cache.js";
+import { reserve, commitUsage, refund } from "./ledger.js";
+import { callGroq } from "./provider.js";
+import { SYSTEM_PROMPT, buildUserMessage } from "./prompt.js";
+import { normaliseVerdict, decide, type Verdict, type Action } from "./decide.js";
+import { env } from "../env.js";
 
 export interface ModerateArgs {
   kind: "conv" | "comment" | "message";
@@ -327,5 +327,5 @@ export async function drainModerationQueue(
 }
 
 // Re-exports so callers can import from one place.
-export { contentHash } from "./cache";
+export { contentHash } from "./cache.js";
 export { env };

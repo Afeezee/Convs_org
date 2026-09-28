@@ -1,9 +1,9 @@
 import { createClerkClient, verifyToken } from "@clerk/backend";
 import type { Context } from "hono";
-import { env, adminEmails } from "./env";
-import { db, schema } from "./db";
+import { env, adminEmails } from "./env.js";
+import { db, schema } from "./db.js";
 import { eq } from "drizzle-orm";
-import { unauthorised, forbidden } from "./errors";
+import { unauthorised, forbidden } from "./errors.js";
 
 let clerkClient: ReturnType<typeof createClerkClient> | null = null;
 function clerk() {

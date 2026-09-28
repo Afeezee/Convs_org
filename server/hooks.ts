@@ -9,10 +9,10 @@
 import { and, eq, sql, inArray } from "drizzle-orm";
 import type { PoolClient } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
-import { getPool, schema, db } from "./db";
-import type { Session } from "./auth";
-import { conflict, badRequest, unprocessable } from "./errors";
-import { moderate } from "./moderation";
+import { getPool, schema, db } from "./db.js";
+import type { Session } from "./auth.js";
+import { conflict, badRequest, unprocessable } from "./errors.js";
+import { moderate } from "./moderation/index.js";
 
 type Tx = ReturnType<typeof drizzle>;
 

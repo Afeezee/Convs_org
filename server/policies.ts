@@ -5,7 +5,7 @@
 // The API layer imports these and applies them uniformly. Nothing here reads
 // or writes the database; that keeps the policy easy to test in isolation.
 
-import type { Session } from "./auth";
+import type { Session } from "./auth.js";
 
 export type EntityName =
   | "Conv"
