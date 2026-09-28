@@ -105,7 +105,11 @@ export const moderationQueueStatusEnum = pgEnum("moderation_queue_status", [
 
 // ---------- Shared column helpers ----------
 
-const baseColumns = {
+// Factory (not a static object) so each table gets its own fresh column
+// definitions. Drizzle Kit derives constraint names from the column object
+// identity — a static shared object would generate the same `<x>_legacy_id_unique`
+// constraint name for every table, and Postgres rejects the duplicate.
+const baseColumns = () => ({
   id: uuid("id").primaryKey().defaultRandom(),
   created_date: timestamp("created_date", { withTimezone: true })
     .defaultNow()
@@ -114,7 +118,7 @@ const baseColumns = {
   created_by: text("created_by"),
   legacy_id: text("legacy_id").unique(),
   is_sample: boolean("is_sample").default(false).notNull(),
-};
+});
 
 // ---------- Core account rows ----------
 
@@ -124,7 +128,7 @@ const baseColumns = {
 export const users = pgTable(
   "users",
   {
-    ...baseColumns,
+    ...baseColumns(),
     clerk_user_id: text("clerk_user_id").unique(),
     email: text("email").notNull().unique(),
     email_verified: boolean("email_verified").default(false).notNull(),
@@ -148,7 +152,7 @@ export const users = pgTable(
 export const profiles = pgTable(
   "profiles",
   {
-    ...baseColumns,
+    ...baseColumns(),
     email: text("email").notNull().unique(),
     full_name: text("full_name").notNull(),
     username: text("username"),
@@ -174,7 +178,7 @@ export const profiles = pgTable(
 export const convs = pgTable(
   "convs",
   {
-    ...baseColumns,
+    ...baseColumns(),
     author_email: text("author_email").notNull(),
     author_name: text("author_name").notNull(),
     type: convTypeEnum("type").default("short").notNull(),
@@ -208,7 +212,7 @@ export const convs = pgTable(
 export const comments = pgTable(
   "comments",
   {
-    ...baseColumns,
+    ...baseColumns(),
     conv_id: uuid("conv_id").notNull(),
     parent_comment_id: uuid("parent_comment_id"),
     author_email: text("author_email").notNull(),
@@ -235,7 +239,7 @@ export const comments = pgTable(
 export const commentRatings = pgTable(
   "comment_ratings",
   {
-    ...baseColumns,
+    ...baseColumns(),
     comment_id: uuid("comment_id").notNull(),
     user_email: text("user_email").notNull(),
     rating: integer("rating").notNull(),
@@ -252,7 +256,7 @@ export const commentRatings = pgTable(
 export const bookmarks = pgTable(
   "bookmarks",
   {
-    ...baseColumns,
+    ...baseColumns(),
     user_email: text("user_email").notNull(),
     conv_id: uuid("conv_id").notNull(),
     type: bookmarkTypeEnum("type").default("conv").notNull(),
@@ -273,7 +277,7 @@ export const bookmarks = pgTable(
 export const follows = pgTable(
   "follows",
   {
-    ...baseColumns,
+    ...baseColumns(),
     follower_email: text("follower_email").notNull(),
     following_email: text("following_email").notNull(),
   },
@@ -288,7 +292,7 @@ export const follows = pgTable(
 export const reconvs = pgTable(
   "reconvs",
   {
-    ...baseColumns,
+    ...baseColumns(),
     user_email: text("user_email").notNull(),
     user_name: text("user_name").notNull(),
     original_conv_id: uuid("original_conv_id").notNull(),
@@ -307,7 +311,7 @@ export const reconvs = pgTable(
 export const messages = pgTable(
   "messages",
   {
-    ...baseColumns,
+    ...baseColumns(),
     conversation_id: text("conversation_id").notNull(),
     sender_email: text("sender_email").notNull(),
     sender_name: text("sender_name"),
@@ -335,7 +339,7 @@ export const messages = pgTable(
 export const notifications = pgTable(
   "notifications",
   {
-    ...baseColumns,
+    ...baseColumns(),
     user_email: text("user_email").notNull(),
     type: notificationTypeEnum("type").notNull(),
     from_email: text("from_email"),
@@ -355,7 +359,7 @@ export const notifications = pgTable(
 );
 
 export const reports = pgTable("reports", {
-  ...baseColumns,
+  ...baseColumns(),
   conv_id: uuid("conv_id").notNull(),
   conv_title: text("conv_title"),
   conv_author_name: text("conv_author_name"),
@@ -370,7 +374,7 @@ export const reports = pgTable("reports", {
 // ---------- Infrastructure tables ----------
 
 export const moderationEvents = pgTable("moderation_events", {
-  ...baseColumns,
+  ...baseColumns(),
   kind: moderationKindEnum("kind").notNull(),
   entity_id: uuid("entity_id"),
   content_hash: text("content_hash").notNull(),
@@ -399,7 +403,7 @@ export const moderationCache = pgTable(
 export const moderationQueue = pgTable(
   "moderation_queue",
   {
-    ...baseColumns,
+    ...baseColumns(),
     kind: moderationKindEnum("kind").notNull(),
     entity_id: uuid("entity_id").notNull(),
     content_hash: text("content_hash").notNull(),
