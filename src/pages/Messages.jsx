@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/api/client";
+import { useAuth } from "@/lib/AuthContext";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Search, Send, Image as ImageIcon, Loader2, Plus, UserPlus, X, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,36 +10,33 @@ import Avatar from "@/components/shared/Avatar";
 import moment from "moment";
 
 export default function Messages() {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeConversation, setActiveConversation] = useState(null);
   const [messageText, setMessageText] = useState("");
   const [showNewChat, setShowNewChat] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
   const [mediaFile, setMediaFile] = useState(null);
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
-  const { data: allMessages = [], isLoading } = useQuery({
+  const { data: allMessages = [] } = useQuery({
     queryKey: ["messages", user?.email],
     queryFn: async () => {
-      const sent = await base44.entities.Message.filter({ sender_email: user.email });
-      const received = await base44.entities.Message.filter({ receiver_email: user.email });
+      const sent = await api.entities.Message.filter({ sender_email: user.email });
+      const received = await api.entities.Message.filter({ receiver_email: user.email });
       return [...sent, ...received].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     },
     enabled: !!user,
+    refetchInterval: 15000, // polling — no websockets
   });
 
   // Use Profile entity for user search in new chat
   const { data: allProfiles = [] } = useQuery({
     queryKey: ["all-profiles-messages"],
-    queryFn: () => base44.entities.Profile.list("-created_date", 100),
+    queryFn: () => api.entities.Profile.list("-created_date", 100),
     enabled: !!user,
   });
 
@@ -83,51 +81,45 @@ export default function Messages() {
     if (activeConversation && user) {
       const unreadMessages = activeMessages.filter(m => m.receiver_email === user.email && !m.is_read);
       unreadMessages.forEach(m => {
-        base44.entities.Message.update(m.id, { is_read: true });
+        api.entities.Message.update(m.id, { is_read: true }).catch(() => {});
       });
       if (unreadMessages.length > 0) {
         queryClient.invalidateQueries({ queryKey: ["messages"] });
       }
     }
-  }, [activeConversation, activeMessages, user]);
+  }, [activeConversation, activeMessages, user, queryClient]);
 
   const handleSendMessage = async () => {
     if ((!messageText.trim() && !mediaFile) || !activeConversation) return;
     setIsSending(true);
-
-    const modResult = await base44.integrations.Core.InvokeLLM({
-      prompt: `Moderate this private message: "${messageText}". Check for harassment, threats, spam.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          action: { type: "string", enum: ["approve", "block"] },
-          feedback: { type: "string" },
-        },
-      },
-    });
-
-    if (modResult.action === "block") {
-      alert(modResult.feedback);
-      setIsSending(false);
-      return;
-    }
+    setSendError(null);
 
     let mediaUrl = "";
     if (mediaFile) {
-      const upload = await base44.integrations.Core.UploadFile({ file: mediaFile });
-      mediaUrl = upload.file_url;
+      try {
+        const upload = await api.integrations.UploadFile({ file: mediaFile });
+        mediaUrl = upload.file_url;
+      } catch (err) {
+        setSendError(err.message ?? "Upload failed.");
+        setIsSending(false);
+        return;
+      }
     }
 
-    await base44.entities.Message.create({
-      conversation_id: activeConversation.id,
-      sender_email: user.email,
-      sender_name: user.full_name,
-      receiver_email: activeConversation.otherEmail,
-      receiver_name: activeConversation.otherName,
-      content: messageText,
-      media_url: mediaUrl,
-      status: "sent",
-    });
+    try {
+      await api.entities.Message.create({
+        conversation_id: activeConversation.id,
+        receiver_email: activeConversation.otherEmail,
+        receiver_name: activeConversation.otherName,
+        content: messageText,
+        media_url: mediaUrl || undefined,
+      });
+    } catch (err) {
+      // 422 → moderation blocked; anything else → generic surface.
+      setSendError(err.message ?? "Message could not be sent.");
+      setIsSending(false);
+      return;
+    }
 
     setMessageText("");
     setMediaFile(null);
@@ -275,6 +267,11 @@ export default function Messages() {
 
               {/* Input area - fixed */}
               <div className="p-4 border-t border-[var(--convs-border)] flex-shrink-0">
+                {sendError && (
+                  <div className="mb-2 p-2 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs whitespace-pre-line">
+                    {sendError}
+                  </div>
+                )}
                 {mediaFile && (
                   <div className="mb-2 flex items-center gap-2 p-2 bg-[var(--convs-bg-tertiary)] rounded-lg">
                     <img src={URL.createObjectURL(mediaFile)} alt="" className="w-12 h-12 rounded object-cover" />

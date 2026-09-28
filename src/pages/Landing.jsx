@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useNavigate } from "react-router-dom";
@@ -129,6 +129,7 @@ function RotatingHeadline() {
 }
 
 export default function Landing() {
+  const { navigateToLogin } = useAuth();
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -157,7 +158,7 @@ export default function Landing() {
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <button
-              onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
+              onClick={() => navigateToLogin(createPageUrl("Home"))}
               className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
               style={{ background: "#6366F1", color: "#FFFFFF" }}
             >
@@ -165,7 +166,7 @@ export default function Landing() {
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
             <button
-              onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
+              onClick={() => navigateToLogin(createPageUrl("Home"))}
               className="inline-flex items-center justify-center px-8 py-3 text-lg font-semibold rounded-xl border-2 transition-all"
               style={{ borderColor: "var(--convs-border)", color: "var(--convs-text)", background: "transparent" }}
             >
@@ -310,7 +311,7 @@ export default function Landing() {
               Where structure beats noise. Where reasoning matters.
             </p>
             <button
-              onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
+              onClick={() => navigateToLogin(createPageUrl("Home"))}
               className="inline-flex items-center justify-center px-10 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
               style={{ background: "#6366F1", color: "#FFFFFF" }}
             >
@@ -360,7 +361,7 @@ export default function Landing() {
           </div>
           <div className="pt-8 border-t border-[var(--convs-border)] flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
-              <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6992f6acbe5cb4f8025521fe/a8787b74f_Convs_Logo-removebg-preview.png" alt="Convs" className="w-6 h-6 object-contain" />
+              <img src="/logo.png" alt="Convs" className="w-6 h-6 object-contain" />
               <span className="font-bold text-[var(--convs-text)]">Convs</span>
             </div>
             <p className="text-sm text-[var(--convs-text-muted)]">

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { api } from "@/api/client";
+import { useAuth } from "@/lib/AuthContext";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -18,42 +19,34 @@ import moment from "moment";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoadingAuth } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
-
-  useEffect(() => {
-    base44.auth.me().then(u => {
-      setUser(u);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ["admin-users"],
-    queryFn: () => base44.entities.User.list("-created_date", 200),
+    queryFn: () => api.entities.User.list("-created_date", 200),
     enabled: !!user && user.role === "admin",
   });
 
   const { data: allProfiles = [] } = useQuery({
     queryKey: ["admin-profiles"],
-    queryFn: () => base44.entities.Profile.list("-created_date", 200),
+    queryFn: () => api.entities.Profile.list("-created_date", 200),
     enabled: !!user && user.role === "admin",
   });
 
   const { data: allConvs = [] } = useQuery({
     queryKey: ["admin-convs"],
-    queryFn: () => base44.entities.Conv.list("-created_date", 200),
+    queryFn: () => api.entities.Conv.list("-created_date", 200),
     enabled: !!user && user.role === "admin",
   });
 
   const { data: allComments = [] } = useQuery({
     queryKey: ["admin-comments"],
-    queryFn: () => base44.entities.Comment.list("-created_date", 200),
+    queryFn: () => api.entities.Comment.list("-created_date", 200),
     enabled: !!user && user.role === "admin",
   });
 
-  if (loading) {
+  if (isLoadingAuth) {
     return (
       <div className="flex justify-center py-20">
         <Loader2 className="w-6 h-6 animate-spin text-[var(--convs-accent)]" />

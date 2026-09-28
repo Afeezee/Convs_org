@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
+import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,8 +9,7 @@ import { Save, Loader2, Camera, Trash2, AlertTriangle } from "lucide-react";
 import Avatar from "@/components/shared/Avatar";
 
 export default function Settings() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({ username: "", bio: "" });
   const [isSaving, setIsSaving] = useState(false);
@@ -20,35 +19,30 @@ export default function Settings() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(async (u) => {
-      setUser(u);
-      const profiles = await base44.entities.Profile.filter({ email: u.email });
+    if (!user) return;
+    (async () => {
+      const profiles = await api.entities.Profile.filter({ email: user.email });
       if (profiles[0]) {
         setProfile(profiles[0]);
         setFormData({ username: profiles[0].username || "", bio: profiles[0].bio || "" });
       } else {
-        // Auto-create profile on first visit
-        const newProfile = await base44.entities.Profile.create({
-          email: u.email,
-          full_name: u.full_name,
-          username: u.email.split("@")[0],
+        const newProfile = await api.entities.Profile.create({
+          full_name: user.full_name,
+          username: user.email.split("@")[0],
           bio: "",
-          profile_image: "",
-          cover_image: "",
-          badges: [],
         });
         setProfile(newProfile);
         setFormData({ username: newProfile.username || "", bio: "" });
       }
-    });
-  }, []);
+    })().catch(() => {});
+  }, [user]);
 
   const handleImageUpload = async (e, field) => {
     const file = e.target.files[0];
     if (!file) return;
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await api.integrations.UploadFile({ file });
     if (profile) {
-      await base44.entities.Profile.update(profile.id, { [field]: file_url });
+      await api.entities.Profile.update(profile.id, { [field]: file_url });
       setProfile({ ...profile, [field]: file_url });
     }
   };
@@ -56,7 +50,7 @@ export default function Settings() {
   const handleSave = async () => {
     setIsSaving(true);
     if (profile) {
-      await base44.entities.Profile.update(profile.id, {
+      await api.entities.Profile.update(profile.id, {
         username: formData.username,
         bio: formData.bio,
         full_name: user.full_name,
@@ -164,19 +158,18 @@ export default function Settings() {
                 onClick={async () => {
                   if (deleteText !== "DELETE") return;
                   setIsDeleting(true);
-                  // Delete profile
-                  if (profile) await base44.entities.Profile.delete(profile.id);
-                  // Delete user's convs
-                  const convs = await base44.entities.Conv.filter({ author_email: user.email });
-                  await Promise.all(convs.map(c => base44.entities.Conv.delete(c.id)));
-                  // Delete user's comments
-                  const comments = await base44.entities.Comment.filter({ author_email: user.email });
-                  await Promise.all(comments.map(c => base44.entities.Comment.delete(c.id)));
-                  // Delete follows
-                  const follows = await base44.entities.Follow.filter({ follower_email: user.email });
-                  await Promise.all(follows.map(f => base44.entities.Follow.delete(f.id)));
-                  // Logout
-                  base44.auth.logout("/");
+                  // Server-side cascade: one call deletes convs, comments,
+                  // follows, bookmarks, ratings, reconvs, messages, notifications,
+                  // profile, users row and the Clerk account.
+                  try {
+                    await api.entities.User.delete(user.id);
+                  } catch (err) {
+                    setIsDeleting(false);
+                    // eslint-disable-next-line no-alert
+                    alert(err.message ?? "Delete failed.");
+                    return;
+                  }
+                  logout("/");
                 }}
                 disabled={deleteText !== "DELETE" || isDeleting}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"

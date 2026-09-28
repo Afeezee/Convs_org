@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { X, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,12 +31,19 @@ export default function EditConvModal({ isOpen, onClose, conv, onUpdated }) {
       .map(t => t.trim().replace(/^#/, ""))
       .filter(Boolean);
 
-    await base44.entities.Conv.update(conv.id, {
-      content,
-      title: conv.type !== "short" ? title : "",
-      rich_content: conv.type === "long" ? content : (conv.rich_content || ""),
-      topics: topicsArr,
-    });
+    try {
+      await api.entities.Conv.update(conv.id, {
+        content,
+        title: conv.type !== "short" ? title : undefined,
+        rich_content: conv.type === "long" ? content : (conv.rich_content || undefined),
+        topics: topicsArr,
+      });
+    } catch (err) {
+      setIsSubmitting(false);
+      // eslint-disable-next-line no-alert
+      alert(err.message ?? "Update failed.");
+      return;
+    }
 
     setIsSubmitting(false);
     onUpdated?.();

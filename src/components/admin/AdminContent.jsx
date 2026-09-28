@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Search, Eye, Trash2, Ban, CheckCircle } from "lucide-react";
@@ -25,19 +25,19 @@ export default function AdminContent({ convs, comments }) {
   );
 
   const handleConvStatus = async (conv, status) => {
-    await base44.entities.Conv.update(conv.id, { status });
+    await api.entities.Conv.update(conv.id, { status });
     queryClient.invalidateQueries({ queryKey: ["admin-convs"] });
   };
 
   const handleDeleteConv = async (conv) => {
     if (!window.confirm("Delete this conv permanently?")) return;
-    await base44.entities.Conv.delete(conv.id);
+    await api.entities.Conv.delete(conv.id);
     queryClient.invalidateQueries({ queryKey: ["admin-convs"] });
   };
 
   const handleDeleteComment = async (comment) => {
     if (!window.confirm("Delete this comment permanently?")) return;
-    await base44.entities.Comment.delete(comment.id);
+    await api.entities.Comment.delete(comment.id);
     queryClient.invalidateQueries({ queryKey: ["admin-comments"] });
   };
 

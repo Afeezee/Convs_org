@@ -2,6 +2,10 @@
 .env
 .env.*
 
+# Legacy export dumps supplied for the one-off data import.
+migration-data/
+migration-report.json
+
 # Logs
 logs
 *.log

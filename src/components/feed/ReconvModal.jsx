@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { X, Repeat2, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import Avatar from "../shared/Avatar";
@@ -13,14 +13,19 @@ export default function ReconvModal({ isOpen, onClose, conv, user, onReconved })
 
   const handleReconv = async () => {
     setIsSubmitting(true);
-    await base44.entities.Reconv.create({
-      user_email: user.email,
-      user_name: user.full_name,
-      original_conv_id: conv.id,
-      original_author_email: conv.author_email,
-      original_author_name: conv.author_name,
-      thought: thought.trim(),
-    });
+    try {
+      await api.entities.Reconv.create({
+        original_conv_id: conv.id,
+        original_author_email: conv.author_email,
+        original_author_name: conv.author_name,
+        thought: thought.trim() || undefined,
+      });
+    } catch (err) {
+      setIsSubmitting(false);
+      // eslint-disable-next-line no-alert
+      alert(err.message ?? "Reconv failed.");
+      return;
+    }
     setThought("");
     setIsSubmitting(false);
     onReconved?.();

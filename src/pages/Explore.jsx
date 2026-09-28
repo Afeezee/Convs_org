@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useQuery } from "@tanstack/react-query";
 import { Search, TrendingUp, Flame, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ export default function Explore() {
 
   const { data: convs = [], isLoading } = useQuery({
     queryKey: ["explore-convs"],
-    queryFn: () => base44.entities.Conv.list("-created_date", 200),
+    queryFn: () => api.entities.Conv.list("-created_date", 200),
   });
 
   // Compute trending topics from actual data

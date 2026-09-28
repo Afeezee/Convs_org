@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Star } from "lucide-react";
 
 export default function CommentRating({ commentId, currentUserEmail }) {
@@ -10,7 +10,7 @@ export default function CommentRating({ commentId, currentUserEmail }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    base44.entities.CommentRating.filter({ comment_id: commentId }).then(ratings => {
+    api.entities.CommentRating.filter({ comment_id: commentId }).then(ratings => {
       setTotalRatings(ratings.length);
       if (ratings.length > 0) {
         const avg = ratings.reduce((sum, r) => sum + (r.rating || 0), 0) / ratings.length;
@@ -20,24 +20,24 @@ export default function CommentRating({ commentId, currentUserEmail }) {
         const mine = ratings.find(r => r.user_email === currentUserEmail);
         if (mine) setUserRating(mine.rating);
       }
-    });
+    }).catch(() => {});
   }, [commentId, currentUserEmail]);
 
   const handleRate = async (rating) => {
     if (!currentUserEmail || isSubmitting) return;
     setIsSubmitting(true);
 
-    const existing = await base44.entities.CommentRating.filter({ comment_id: commentId, user_email: currentUserEmail });
+    const existing = await api.entities.CommentRating.filter({ comment_id: commentId, user_email: currentUserEmail });
     if (existing[0]) {
-      await base44.entities.CommentRating.update(existing[0].id, { rating });
+      await api.entities.CommentRating.update(existing[0].id, { rating });
     } else {
-      await base44.entities.CommentRating.create({ comment_id: commentId, user_email: currentUserEmail, rating });
+      await api.entities.CommentRating.create({ comment_id: commentId, rating });
     }
 
     setUserRating(rating);
 
     // Recalculate average
-    const allRatings = await base44.entities.CommentRating.filter({ comment_id: commentId });
+    const allRatings = await api.entities.CommentRating.filter({ comment_id: commentId });
     setTotalRatings(allRatings.length);
     if (allRatings.length > 0) {
       const avg = allRatings.reduce((sum, r) => sum + (r.rating || 0), 0) / allRatings.length;

@@ -1,0 +1,23 @@
+{
+  "name": "Convs",
+  "short_name": "Convs",
+  "description": "The intellectual courtroom of the internet — structured, AI-moderated debate.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0F19",
+  "theme_color": "#6366F1",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

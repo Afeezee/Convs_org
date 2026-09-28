@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
+import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -19,7 +20,7 @@ export default function ConvDetail() {
   const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const convId = params.get("id");
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [highlightedText, setHighlightedText] = useState("");
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -27,25 +28,22 @@ export default function ConvDetail() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    base44.auth.me().then(u => {
-      setUser(u);
-      if (u && convId) {
-        base44.entities.Bookmark.filter({ user_email: u.email, conv_id: convId })
-          .then(bms => setIsBookmarked(bms.length > 0));
-      }
-    }).catch(() => {});
-  }, [convId]);
+    if (!user || !convId) return;
+    api.entities.Bookmark.filter({ user_email: user.email, conv_id: convId })
+      .then(bms => setIsBookmarked(bms.length > 0))
+      .catch(() => {});
+  }, [user, convId]);
 
   const { data: convs = [], isLoading: convLoading } = useQuery({
     queryKey: ["conv", convId],
-    queryFn: () => base44.entities.Conv.filter({ id: convId }),
+    queryFn: () => api.entities.Conv.filter({ id: convId }),
     enabled: !!convId,
   });
   const conv = convs[0];
 
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ["comments", convId],
-    queryFn: () => base44.entities.Comment.filter({ conv_id: convId }, "-created_date", 100),
+    queryFn: () => api.entities.Comment.filter({ conv_id: convId }, "-created_date", 100),
     enabled: !!convId,
   });
 
@@ -60,22 +58,19 @@ export default function ConvDetail() {
   const handleBookmark = async () => {
     if (!user || !conv) return;
     if (isBookmarked) {
-      const bms = await base44.entities.Bookmark.filter({ user_email: user.email, conv_id: conv.id });
-      if (bms[0]) await base44.entities.Bookmark.delete(bms[0].id);
+      const bms = await api.entities.Bookmark.filter({ user_email: user.email, conv_id: conv.id });
+      if (bms[0]) await api.entities.Bookmark.delete(bms[0].id);
       setIsBookmarked(false);
     } else {
-      await base44.entities.Bookmark.create({ user_email: user.email, conv_id: conv.id });
+      await api.entities.Bookmark.create({ conv_id: conv.id });
       setIsBookmarked(true);
     }
   };
 
+  // Counters are the server's job now. Just refetch to pick up the new totals.
   const handleCommented = () => {
     queryClient.invalidateQueries({ queryKey: ["comments", convId] });
     queryClient.invalidateQueries({ queryKey: ["conv", convId] });
-    // Update comment count
-    if (conv) {
-      base44.entities.Conv.update(conv.id, { comment_count: (conv.comment_count || 0) + 1 });
-    }
   };
 
   if (convLoading) {

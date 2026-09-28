@@ -1,23 +1,10 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
+import { api } from "@/api/client";
+import { FLAWS, STRENGTHS } from "@/shared/tags";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Loader2, ThumbsUp, ThumbsDown, HelpCircle, Link as LinkIcon } from "lucide-react";
-
-const FLAWS = [
-  "Ad Hominem", "Strawman", "False Dilemma", "Slippery Slope", "Circular Reasoning",
-  "Hasty Generalisation", "Appeal to Authority", "Appeal to Emotion", "Post Hoc", "Red Herring",
-  "No Evidence", "Weak Evidence", "Anecdotal", "Misinterpreted Data", "Unverified Source",
-  "Oversimplification", "Unsupported Assumption", "Internal Contradiction", "Ambiguity",
-  "Off-topic", "Non Sequitur",
-];
-
-const STRENGTHS = [
-  "Strong Evidence", "Empirical Support", "Clear Logical Flow",
-  "Balanced Perspective", "Credible Source", "Nuanced Analysis",
-];
 
 export default function CommentForm({ convId, conv, user, highlightedText, onCommented, parentCommentId }) {
   const [stance, setStance] = useState("");
@@ -28,111 +15,41 @@ export default function CommentForm({ convId, conv, user, highlightedText, onCom
   const [showEvidence, setShowEvidence] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [moderationMsg, setModerationMsg] = useState(null);
+  const [queuedMsg, setQueuedMsg] = useState(null);
 
   const handleSubmit = async () => {
     if (!stance || !content.trim()) return;
     setIsSubmitting(true);
     setModerationMsg(null);
+    setQueuedMsg(null);
 
-    // AI Moderation Pipeline (5-step layered moderation)
-    const mod = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a strict moderation AI for Convs, an intellectual debate platform. Run a 5-step moderation pipeline on this comment:
-
-STEP 1 — TOXICITY DETECTION:
-Check for hate speech, harassment, threats, profanity. Score toxicity 0–1. If toxicity_score >= 0.85 → action must be "block".
-
-STEP 2 — PERSONAL ATTACK DETECTION:
-Allow: "This argument lacks evidence." (attacks the argument)
-Block: "You are ignorant." (attacks the person)
-Set personal_attack to true/false.
-
-STEP 3 — CONSTRUCTIVENESS SCORE:
-Rate 0–1 how constructive the comment is. If < 0.4 → action should be "warn" and feedback should prompt user to elaborate with more substance.
-
-STEP 4 — FLAW/STRENGTH TAG VALIDATION:
-If a flaw_tag or strength_tag is provided, check if it semantically matches the comment content. Score flaw_match_score 0–1. If mismatch (< 0.4), suggest a better tag in feedback.
-
-STEP 5 — BIAS & MANIPULATION DETECTION:
-Check for emotionally manipulative language, fear-mongering, guilt-tripping. If detected, set action to "warn" with soft warning in feedback.
-
-FINAL ACTION RULES:
-- "block" if toxicity >= 0.85 OR contains personal attacks OR promotes violence/self-harm
-- "warn" if constructiveness < 0.4 OR emotionally manipulative OR flaw tag mismatch
-- "approve" if the comment engages constructively, even if it disagrees strongly
-
-Comment to moderate: "${content}"
-Stance: ${stance}
-${flawTag ? `Flaw tag selected: ${flawTag}` : "No flaw tag selected."}
-${strengthTag ? `Strength tag selected: ${strengthTag}` : "No strength tag selected."}
-
-Provide transparent, helpful feedback explaining your decision so the user understands.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          toxicity_score: { type: "number" },
-          personal_attack: { type: "boolean" },
-          constructiveness_score: { type: "number" },
-          flaw_match_score: { type: "number" },
-          action: { type: "string", enum: ["approve", "warn", "block"] },
-          feedback_message: { type: "string" },
-        },
-      },
-    });
-
-    if (mod.action === "block") {
-      setModerationMsg(mod.feedback_message);
-      setIsSubmitting(false);
-      return;
-    }
-    if (mod.action === "warn") {
-      setModerationMsg(mod.feedback_message + "\n\nPlease revise your comment with more context and evidence before posting.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    await base44.entities.Comment.create({
-      conv_id: convId,
-      parent_comment_id: parentCommentId || "",
-      author_email: user.email,
-      author_name: user.full_name,
-      stance,
-      content,
-      highlighted_text: highlightedText || "",
-      flaw_tag: stance === "oppose" ? flawTag : "",
-      strength_tag: stance === "support" ? strengthTag : "",
-      evidence_url: evidenceUrl,
-      constructiveness_score: mod.constructiveness_score || 0.5,
-      status: "published",
-    });
-
-    // Update conv support/oppose count
-    if (conv) {
-      if (stance === "support") {
-        await base44.entities.Conv.update(conv.id, {
-          support_count: (conv.support_count || 0) + 1,
-        });
-      } else if (stance === "oppose") {
-        await base44.entities.Conv.update(conv.id, {
-          oppose_count: (conv.oppose_count || 0) + 1,
-        });
-      }
-    }
-
-    // Send notification to conv author
-    if (conv && conv.author_email && conv.author_email !== user.email) {
-      base44.entities.Notification.create({
-        user_email: conv.author_email,
-        type: stance === "support" ? "support" : stance === "oppose" ? "oppose" : "comment",
-        from_email: user.email,
-        from_name: user.full_name,
+    // Server owns moderation, counters and notifications. A 422 carries the
+    // feedback for the user; a queued: true marker means the AI budget was
+    // exhausted and a moderator will review shortly.
+    let comment;
+    try {
+      comment = await api.entities.Comment.create({
         conv_id: convId,
-        message: stance === "support"
-          ? "supported your conv"
-          : stance === "oppose"
-          ? "opposed your conv"
-          : "commented on your conv",
-        is_read: false,
+        parent_comment_id: parentCommentId || undefined,
+        stance,
+        content,
+        highlighted_text: highlightedText || undefined,
+        flaw_tag: stance === "oppose" ? flawTag : undefined,
+        strength_tag: stance === "support" ? strengthTag : undefined,
+        evidence_url: evidenceUrl || undefined,
       });
+    } catch (err) {
+      if (err.status === 422) {
+        setModerationMsg(err.message);
+      } else {
+        setModerationMsg(err.message ?? "Something went wrong. Please try again.");
+      }
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (comment?._queued) {
+      setQueuedMsg("Your comment is queued for review and will appear once approved.");
     }
 
     setContent("");
@@ -228,8 +145,14 @@ Provide transparent, helpful feedback explaining your decision so the user under
       )}
 
       {moderationMsg && (
-        <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm">
+        <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm whitespace-pre-line">
           {moderationMsg}
+        </div>
+      )}
+
+      {queuedMsg && (
+        <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm">
+          {queuedMsg}
         </div>
       )}
 

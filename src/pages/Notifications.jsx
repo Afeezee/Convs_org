@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React from "react";
+import { api } from "@/api/client";
+import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -29,27 +30,24 @@ const COLORS = {
 };
 
 export default function Notifications() {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["notifications", user?.email],
-    queryFn: () => base44.entities.Notification.filter({ user_email: user.email }, "-created_date", 50),
+    queryFn: () => api.entities.Notification.filter({ user_email: user.email }, "-created_date", 50),
     enabled: !!user,
+    refetchInterval: 30000, // polling — no websockets
   });
 
   const markReadMutation = useMutation({
-    mutationFn: (id) => base44.entities.Notification.update(id, { is_read: true }),
+    mutationFn: (id) => api.entities.Notification.update(id, { is_read: true }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
   const markAllRead = async () => {
     const unread = notifications.filter(n => !n.is_read);
-    await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { is_read: true })));
+    await Promise.all(unread.map(n => api.entities.Notification.update(n.id, { is_read: true })));
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
   };
 

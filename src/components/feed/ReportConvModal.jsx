@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { X, Flag, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,17 +26,21 @@ export default function ReportConvModal({ isOpen, onClose, conv, user }) {
     if (!reason) return;
     setIsSubmitting(true);
 
-    await base44.entities.Report.create({
-      conv_id: conv.id,
-      conv_title: conv.title || conv.content?.slice(0, 100),
-      conv_author_name: conv.author_name,
-      conv_author_email: conv.author_email,
-      reporter_email: user?.email,
-      reporter_name: user?.full_name,
-      reason,
-      details,
-      status: "pending",
-    });
+    try {
+      await api.entities.Report.create({
+        conv_id: conv.id,
+        conv_title: conv.title || conv.content?.slice(0, 100),
+        conv_author_name: conv.author_name,
+        conv_author_email: conv.author_email,
+        reason,
+        details: details || undefined,
+      });
+    } catch (err) {
+      setIsSubmitting(false);
+      // eslint-disable-next-line no-alert
+      alert(err.message ?? "Report failed.");
+      return;
+    }
 
     setIsSubmitting(false);
     setSubmitted(true);

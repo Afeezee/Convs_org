@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { X, Image, Type, FileText, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,7 +20,6 @@ export default function CreateConvModal({ isOpen, onClose, user, onCreated }) {
   const [mediaFile, setMediaFile] = useState(null);
   const [mediaPreview, setMediaPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isModerating, setIsModerating] = useState(false);
   const [moderationFeedback, setModerationFeedback] = useState(null);
   const fileRef = useRef();
 
@@ -34,70 +33,21 @@ export default function CreateConvModal({ isOpen, onClose, user, onCreated }) {
     }
   };
 
-  const handleModerate = async () => {
-    setIsModerating(true);
-    setModerationFeedback(null);
-    const res = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a strict moderation AI for Convs, an intellectual debate platform. Run a 5-step moderation pipeline on this post:
-
-STEP 1 — TOXICITY DETECTION:
-Check for hate speech, harassment, threats, profanity. Score toxicity 0–1. If toxicity_score >= 0.85 → action must be "block".
-
-STEP 2 — PERSONAL ATTACK DETECTION:
-Allow: "This argument lacks evidence." (attacks the argument)
-Block: "You are ignorant." (attacks the person)
-
-STEP 3 — CONSTRUCTIVENESS SCORE:
-Rate 0–1 how constructive the post is. If < 0.4 → action should be "warn" and prompt user to add more substance.
-
-STEP 4 — QUALITY SCORE:
-Rate overall argument quality 0–1 considering logic, evidence, and clarity.
-
-STEP 5 — BIAS & MANIPULATION DETECTION:
-Check for emotionally manipulative language. If detected, action should be "warn" with feedback.
-
-FINAL ACTION RULES:
-- "block" if toxicity >= 0.85 OR personal attacks OR promotes violence/self-harm
-- "warn" if constructiveness < 0.4 OR emotionally manipulative
-- "approve" if the post presents an argument constructively
-
-Post content: "${content}"
-
-Provide transparent, helpful feedback explaining your decision.`,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          toxicity_score: { type: "number" },
-          has_personal_attack: { type: "boolean" },
-          constructiveness_score: { type: "number" },
-          quality_score: { type: "number" },
-          action: { type: "string", enum: ["approve", "warn", "block"] },
-          feedback_message: { type: "string" },
-        },
-      },
-    });
-    setIsModerating(false);
-    return res;
-  };
-
   const handleSubmit = async () => {
     if (!content.trim()) return;
     setIsSubmitting(true);
-
-    const modResult = await handleModerate();
-    if (modResult.action === "block") {
-      setModerationFeedback(modResult.feedback_message);
-      setIsSubmitting(false);
-      return;
-    }
-    if (modResult.action === "warn") {
-      setModerationFeedback(modResult.feedback_message);
-    }
+    setModerationFeedback(null);
 
     let mediaUrl = "";
     if (mediaFile) {
-      const upload = await base44.integrations.Core.UploadFile({ file: mediaFile });
-      mediaUrl = upload.file_url;
+      try {
+        const upload = await api.integrations.UploadFile({ file: mediaFile });
+        mediaUrl = upload.file_url;
+      } catch (err) {
+        setModerationFeedback(err.message ?? "Upload failed.");
+        setIsSubmitting(false);
+        return;
+      }
     }
 
     const topicsArr = topics
@@ -105,29 +55,43 @@ Provide transparent, helpful feedback explaining your decision.`,
       .map(t => t.trim().replace(/^#/, ""))
       .filter(Boolean);
 
-    const conv = await base44.entities.Conv.create({
-      author_email: user.email,
-      author_name: user.full_name,
-      type,
-      title: type !== "short" ? title : "",
-      content,
-      rich_content: type === "long" ? content : "",
-      media_url: mediaUrl,
-      media_type: mediaFile ? "image" : "none",
-      topics: topicsArr,
-      quality_score: Math.round((modResult.quality_score || 0.5) * 100),
-      status: "published",
-    });
+    let conv;
+    try {
+      conv = await api.entities.Conv.create({
+        type,
+        title: type !== "short" ? title : undefined,
+        content,
+        rich_content: type === "long" ? content : undefined,
+        media_url: mediaUrl || undefined,
+        media_type: mediaFile ? "image" : "none",
+        topics: topicsArr,
+      });
+    } catch (err) {
+      // Server-enforced moderation returns 422 with a human-readable message.
+      setModerationFeedback(err.message ?? "Something went wrong. Please try again.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (conv?._warning) {
+      // Convs warn still publishes — surface the note in the same amber box
+      // and close as today.
+      setModerationFeedback(conv._warning);
+    }
+    if (conv?._queued) {
+      setModerationFeedback(
+        "Your conv is queued for review and will be visible once approved."
+      );
+    }
 
     setContent("");
     setTitle("");
     setTopics("");
     setMediaFile(null);
     setMediaPreview(null);
-    setModerationFeedback(null);
     setIsSubmitting(false);
     onCreated?.(conv);
-    onClose();
+    if (!conv?._warning && !conv?._queued) onClose();
   };
 
   return (
@@ -228,7 +192,7 @@ Provide transparent, helpful feedback explaining your decision.`,
             />
 
             {moderationFeedback && (
-              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm">
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-sm whitespace-pre-line">
                 {moderationFeedback}
               </div>
             )}

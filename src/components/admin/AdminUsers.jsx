@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Search, Shield, ShieldOff, Trash2, Eye } from "lucide-react";
@@ -27,13 +27,13 @@ export default function AdminUsers({ users, profiles = [] }) {
 
   const handleRoleToggle = async (user) => {
     const newRole = user.role === "admin" ? "user" : "admin";
-    await base44.entities.User.update(user.id, { role: newRole });
+    await api.entities.User.update(user.id, { role: newRole });
     queryClient.invalidateQueries({ queryKey: ["admin-users"] });
   };
 
   const handleDelete = async (user) => {
     if (!window.confirm(`Are you sure you want to delete ${user.full_name || user.email}?`)) return;
-    await base44.entities.User.delete(user.id);
+    await api.entities.User.delete(user.id);
     queryClient.invalidateQueries({ queryKey: ["admin-users"] });
   };
 

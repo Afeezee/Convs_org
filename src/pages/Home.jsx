@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
+import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Loader2, RefreshCw } from "lucide-react";
 import ConvCard from "@/components/feed/ConvCard";
@@ -16,7 +17,7 @@ import SignInPrompt from "@/components/feed/SignInPrompt";
 export default function Home() {
   const [feedTab, setFeedTab] = useState("trending");
   const [showCreate, setShowCreate] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
   const [shareConv, setShareConv] = useState(null);
   const [reconvConv, setReconvConv] = useState(null);
@@ -58,73 +59,40 @@ export default function Home() {
     setIsPulling(false);
   }, [pullDistance, queryClient]);
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
   const { data: convs = [], isLoading } = useQuery({
     queryKey: ["convs", feedTab],
-    queryFn: () => base44.entities.Conv.list("-created_date", 50),
+    queryFn: () => api.entities.Conv.list("-created_date", 50),
   });
 
   const { data: users = [] } = useQuery({
     queryKey: ["suggested-profiles"],
-    queryFn: () => base44.entities.Profile.list("-created_date", 10),
+    queryFn: () => api.entities.Profile.list("-created_date", 10),
   });
 
   const { data: reconvs = [] } = useQuery({
     queryKey: ["reconvs"],
-    queryFn: () => base44.entities.Reconv.list("-created_date", 50),
+    queryFn: () => api.entities.Reconv.list("-created_date", 50),
   });
 
   useEffect(() => {
     if (!user) return;
-    base44.entities.Bookmark.filter({ user_email: user.email }).then(bms => {
+    api.entities.Bookmark.filter({ user_email: user.email }).then(bms => {
       setBookmarkedIds(new Set(bms.map(b => b.conv_id)));
-    });
+    }).catch(() => {});
   }, [user]);
 
-  const supportMutation = useMutation({
-    mutationFn: async (conv) => {
-      const mod = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a moderation AI. A user is quick-supporting a conv. This is a standard platform action, not a written comment. Always approve unless the system is being abused. Return JSON:`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            action: { type: "string", enum: ["approve", "block"] },
-          },
-        },
-      });
-      if (mod.action === "block") throw new Error("blocked");
+  // Quick-vote is a single Comment.create with a fixed content. Counters,
+  // notifications and moderation are the server's job now.
+  const quickVote = async (conv, stance) => {
+    await api.entities.Comment.create({
+      conv_id: conv.id,
+      stance,
+      content: stance === "support" ? "Supported this conv" : "Opposed this conv",
+    });
+  };
 
-      await base44.entities.Comment.create({
-        conv_id: conv.id,
-        author_email: user.email,
-        author_name: user.full_name,
-        stance: "support",
-        content: "Supported this conv",
-      });
-      await base44.entities.Conv.update(conv.id, {
-        support_count: (conv.support_count || 0) + 1,
-      });
-      const authorProfiles = await base44.entities.Profile.filter({ email: conv.author_email });
-      if (authorProfiles[0]) {
-        await base44.entities.Profile.update(authorProfiles[0].id, {
-          support_count: (authorProfiles[0].support_count || 0) + 1,
-        });
-      }
-      if (conv.author_email !== user.email) {
-        base44.entities.Notification.create({
-          user_email: conv.author_email,
-          type: "support",
-          from_email: user.email,
-          from_name: user.full_name,
-          conv_id: conv.id,
-          message: "supported your conv",
-          is_read: false,
-        });
-      }
-    },
+  const supportMutation = useMutation({
+    mutationFn: (conv) => quickVote(conv, "support"),
     onMutate: async (conv) => {
       await queryClient.cancelQueries({ queryKey: ["convs", feedTab] });
       const prev = queryClient.getQueryData(["convs", feedTab]);
@@ -143,46 +111,7 @@ export default function Home() {
   });
 
   const opposeMutation = useMutation({
-    mutationFn: async (conv) => {
-      const mod = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a moderation AI. A user is quick-opposing a conv. This is a standard platform action, not a written comment. Always approve unless the system is being abused. Return JSON:`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            action: { type: "string", enum: ["approve", "block"] },
-          },
-        },
-      });
-      if (mod.action === "block") throw new Error("blocked");
-
-      await base44.entities.Comment.create({
-        conv_id: conv.id,
-        author_email: user.email,
-        author_name: user.full_name,
-        stance: "oppose",
-        content: "Opposed this conv",
-      });
-      await base44.entities.Conv.update(conv.id, {
-        oppose_count: (conv.oppose_count || 0) + 1,
-      });
-      const authorProfiles = await base44.entities.Profile.filter({ email: conv.author_email });
-      if (authorProfiles[0]) {
-        await base44.entities.Profile.update(authorProfiles[0].id, {
-          oppose_count: (authorProfiles[0].oppose_count || 0) + 1,
-        });
-      }
-      if (conv.author_email !== user.email) {
-        base44.entities.Notification.create({
-          user_email: conv.author_email,
-          type: "oppose",
-          from_email: user.email,
-          from_name: user.full_name,
-          conv_id: conv.id,
-          message: "opposed your conv",
-          is_read: false,
-        });
-      }
-    },
+    mutationFn: (conv) => quickVote(conv, "oppose"),
     onMutate: async (conv) => {
       await queryClient.cancelQueries({ queryKey: ["convs", feedTab] });
       const prev = queryClient.getQueryData(["convs", feedTab]);
@@ -203,11 +132,11 @@ export default function Home() {
   const handleBookmark = async (conv) => {
     if (!user) return;
     if (bookmarkedIds.has(conv.id)) {
-      const bms = await base44.entities.Bookmark.filter({ user_email: user.email, conv_id: conv.id });
-      if (bms[0]) await base44.entities.Bookmark.delete(bms[0].id);
+      const bms = await api.entities.Bookmark.filter({ user_email: user.email, conv_id: conv.id });
+      if (bms[0]) await api.entities.Bookmark.delete(bms[0].id);
       setBookmarkedIds(prev => { const n = new Set(prev); n.delete(conv.id); return n; });
     } else {
-      await base44.entities.Bookmark.create({ user_email: user.email, conv_id: conv.id });
+      await api.entities.Bookmark.create({ conv_id: conv.id });
       setBookmarkedIds(prev => new Set(prev).add(conv.id));
     }
   };

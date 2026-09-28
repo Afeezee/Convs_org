@@ -1,5 +1,5 @@
 import React from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useQuery } from "@tanstack/react-query";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { BarChart3, MessageSquare, ThumbsUp, ThumbsDown, TrendingUp, Star } from "lucide-react";
@@ -13,7 +13,7 @@ export default function ProfileAnalytics({ convs = [], comments = [], profileUse
       if (commentIds.length === 0) return [];
       const results = [];
       for (const id of commentIds) {
-        const ratings = await base44.entities.CommentRating.filter({ comment_id: id });
+        const ratings = await api.entities.CommentRating.filter({ comment_id: id });
         results.push(...ratings);
       }
       return results;

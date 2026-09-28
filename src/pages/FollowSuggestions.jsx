@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React, { useState } from "react";
+import { api } from "@/api/client";
+import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -9,63 +10,41 @@ import { Button } from "@/components/ui/button";
 import Avatar from "@/components/shared/Avatar";
 
 export default function FollowSuggestions() {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
 
   // Use Profile entity instead of User for public data
   const { data: allProfiles = [], isLoading } = useQuery({
     queryKey: ["all-profiles-search"],
-    queryFn: () => base44.entities.Profile.list("-created_date", 200),
+    queryFn: () => api.entities.Profile.list("-created_date", 200),
     enabled: !!user,
   });
 
   const { data: myFollows = [] } = useQuery({
     queryKey: ["my-follows", user?.email],
-    queryFn: () => base44.entities.Follow.filter({ follower_email: user.email }),
+    queryFn: () => api.entities.Follow.filter({ follower_email: user.email }),
     enabled: !!user,
   });
 
   const { data: myConvs = [] } = useQuery({
     queryKey: ["my-convs", user?.email],
-    queryFn: () => base44.entities.Conv.filter({ author_email: user.email }),
+    queryFn: () => api.entities.Conv.filter({ author_email: user.email }),
     enabled: !!user,
   });
 
   const { data: myComments = [] } = useQuery({
     queryKey: ["my-comments", user?.email],
-    queryFn: () => base44.entities.Comment.filter({ author_email: user.email }),
+    queryFn: () => api.entities.Comment.filter({ author_email: user.email }),
     enabled: !!user,
   });
 
   const followingEmails = new Set(myFollows.map(f => f.following_email));
 
+  // Counters and notifications are the server's job now — just create/delete
+  // and refetch to pick up the new totals.
   const followMutation = useMutation({
-    mutationFn: async (targetEmail) => {
-      await base44.entities.Follow.create({ follower_email: user.email, following_email: targetEmail });
-      // Update follower/following counts on profiles
-      const targetProfiles = await base44.entities.Profile.filter({ email: targetEmail });
-      if (targetProfiles[0]) {
-        await base44.entities.Profile.update(targetProfiles[0].id, { followers_count: (targetProfiles[0].followers_count || 0) + 1 });
-      }
-      const myProfiles = await base44.entities.Profile.filter({ email: user.email });
-      if (myProfiles[0]) {
-        await base44.entities.Profile.update(myProfiles[0].id, { following_count: (myProfiles[0].following_count || 0) + 1 });
-      }
-      // Send follow notification
-      await base44.entities.Notification.create({
-        user_email: targetEmail,
-        type: "follow",
-        from_email: user.email,
-        from_name: user.full_name,
-        message: "started following you",
-        is_read: false,
-      });
-    },
+    mutationFn: (targetEmail) => api.entities.Follow.create({ following_email: targetEmail }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-follows"] });
       queryClient.invalidateQueries({ queryKey: ["all-profiles-search"] });
@@ -74,17 +53,11 @@ export default function FollowSuggestions() {
 
   const unfollowMutation = useMutation({
     mutationFn: async (targetEmail) => {
-      const follows = await base44.entities.Follow.filter({ follower_email: user.email, following_email: targetEmail });
-      if (follows[0]) await base44.entities.Follow.delete(follows[0].id);
-      // Update follower/following counts on profiles
-      const targetProfiles = await base44.entities.Profile.filter({ email: targetEmail });
-      if (targetProfiles[0]) {
-        await base44.entities.Profile.update(targetProfiles[0].id, { followers_count: Math.max((targetProfiles[0].followers_count || 0) - 1, 0) });
-      }
-      const myProfiles = await base44.entities.Profile.filter({ email: user.email });
-      if (myProfiles[0]) {
-        await base44.entities.Profile.update(myProfiles[0].id, { following_count: Math.max((myProfiles[0].following_count || 0) - 1, 0) });
-      }
+      const follows = await api.entities.Follow.filter({
+        follower_email: user.email,
+        following_email: targetEmail,
+      });
+      if (follows[0]) await api.entities.Follow.delete(follows[0].id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-follows"] });

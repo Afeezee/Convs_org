@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -29,7 +29,7 @@ export default function AdminReports() {
 
   const { data: reports = [], isLoading } = useQuery({
     queryKey: ["admin-reports"],
-    queryFn: () => base44.entities.Report.list("-created_date", 200),
+    queryFn: () => api.entities.Report.list("-created_date", 200),
   });
 
   const filteredReports = filter === "all"
@@ -47,13 +47,13 @@ export default function AdminReports() {
   const sortedDates = Object.keys(groupedByDate).sort((a, b) => new Date(b) - new Date(a));
 
   const handleStatus = async (report, status) => {
-    await base44.entities.Report.update(report.id, { status });
+    await api.entities.Report.update(report.id, { status });
     queryClient.invalidateQueries({ queryKey: ["admin-reports"] });
   };
 
   const handleModerateConv = async (report) => {
-    await base44.entities.Conv.update(report.conv_id, { status: "moderated" });
-    await base44.entities.Report.update(report.id, { status: "action_taken" });
+    await api.entities.Conv.update(report.conv_id, { status: "moderated" });
+    await api.entities.Report.update(report.id, { status: "action_taken" });
     queryClient.invalidateQueries({ queryKey: ["admin-reports"] });
     queryClient.invalidateQueries({ queryKey: ["admin-convs"] });
   };

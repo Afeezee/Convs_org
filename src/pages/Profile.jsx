@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { api } from "@/api/client";
+import { useAuth } from "@/lib/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -18,7 +19,7 @@ import moment from "moment";
 export default function Profile() {
   const params = new URLSearchParams(window.location.search);
   const profileEmail = params.get("email");
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState("convs");
   const [isFollowing, setIsFollowing] = useState(false);
   const [showCreateConv, setShowCreateConv] = useState(false);
@@ -28,45 +29,41 @@ export default function Profile() {
   const [bookmarkedIds, setBookmarkedIds] = useState(new Set());
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
-  }, []);
-
   // Fetch profile from Profile entity
   const { data: profiles = [], isLoading: profileLoading } = useQuery({
     queryKey: ["profile-data", profileEmail],
-    queryFn: () => base44.entities.Profile.filter({ email: profileEmail }),
+    queryFn: () => api.entities.Profile.filter({ email: profileEmail }),
     enabled: !!profileEmail,
   });
   const profileUser = profiles[0];
 
   const { data: convs = [] } = useQuery({
     queryKey: ["profile-convs", profileEmail],
-    queryFn: () => base44.entities.Conv.filter({ author_email: profileEmail }, "-created_date", 50),
+    queryFn: () => api.entities.Conv.filter({ author_email: profileEmail }, "-created_date", 50),
     enabled: !!profileEmail,
   });
 
   const { data: comments = [] } = useQuery({
     queryKey: ["profile-comments", profileEmail],
-    queryFn: () => base44.entities.Comment.filter({ author_email: profileEmail }, "-created_date", 50),
+    queryFn: () => api.entities.Comment.filter({ author_email: profileEmail }, "-created_date", 50),
     enabled: !!profileEmail,
   });
 
   const { data: bookmarks = [] } = useQuery({
     queryKey: ["profile-bookmarks", profileEmail],
-    queryFn: () => base44.entities.Bookmark.filter({ user_email: profileEmail }, "-created_date", 50),
+    queryFn: () => api.entities.Bookmark.filter({ user_email: profileEmail }, "-created_date", 50),
     enabled: !!profileEmail && activeTab === "bookmarks",
   });
 
   const { data: reconvs = [] } = useQuery({
     queryKey: ["profile-reconvs", profileEmail],
-    queryFn: () => base44.entities.Reconv.filter({ user_email: profileEmail }, "-created_date", 50),
+    queryFn: () => api.entities.Reconv.filter({ user_email: profileEmail }, "-created_date", 50),
     enabled: !!profileEmail,
   });
 
   const { data: allConvs = [] } = useQuery({
     queryKey: ["all-convs-for-profile"],
-    queryFn: () => base44.entities.Conv.list("-created_date", 200),
+    queryFn: () => api.entities.Conv.list("-created_date", 200),
     enabled: reconvs.length > 0 || (activeTab === "bookmarks" && bookmarks.length > 0),
   });
 
@@ -79,19 +76,19 @@ export default function Profile() {
 
   useEffect(() => {
     if (!currentUser) return;
-    base44.entities.Bookmark.filter({ user_email: currentUser.email }).then(bms => {
+    api.entities.Bookmark.filter({ user_email: currentUser.email }).then(bms => {
       setBookmarkedIds(new Set(bms.map(b => b.conv_id)));
-    });
+    }).catch(() => {});
   }, [currentUser]);
 
   const handleBookmark = async (conv) => {
     if (!currentUser) return;
     if (bookmarkedIds.has(conv.id)) {
-      const bms = await base44.entities.Bookmark.filter({ user_email: currentUser.email, conv_id: conv.id });
-      if (bms[0]) await base44.entities.Bookmark.delete(bms[0].id);
+      const bms = await api.entities.Bookmark.filter({ user_email: currentUser.email, conv_id: conv.id });
+      if (bms[0]) await api.entities.Bookmark.delete(bms[0].id);
       setBookmarkedIds(prev => { const n = new Set(prev); n.delete(conv.id); return n; });
     } else {
-      await base44.entities.Bookmark.create({ user_email: currentUser.email, conv_id: conv.id });
+      await api.entities.Bookmark.create({ conv_id: conv.id });
       setBookmarkedIds(prev => new Set(prev).add(conv.id));
     }
     queryClient.invalidateQueries({ queryKey: ["profile-bookmarks"] });
@@ -99,47 +96,27 @@ export default function Profile() {
 
   useEffect(() => {
     if (!currentUser || !profileEmail) return;
-    base44.entities.Follow.filter({ follower_email: currentUser.email, following_email: profileEmail })
-      .then(res => setIsFollowing(res.length > 0));
+    api.entities.Follow.filter({ follower_email: currentUser.email, following_email: profileEmail })
+      .then(res => setIsFollowing(res.length > 0))
+      .catch(() => {});
   }, [currentUser, profileEmail]);
 
+  // Follow counters and notifications are the server's job now. We just call
+  // create/delete and refetch to pick up the new numbers.
   const handleFollow = async () => {
     if (!currentUser) return;
     if (isFollowing) {
-      const follows = await base44.entities.Follow.filter({ follower_email: currentUser.email, following_email: profileEmail });
-      if (follows[0]) await base44.entities.Follow.delete(follows[0].id);
-      // Update counts
-      if (profileUser) {
-        await base44.entities.Profile.update(profileUser.id, { followers_count: Math.max((profileUser.followers_count || 0) - 1, 0) });
-      }
-      const myProfiles = await base44.entities.Profile.filter({ email: currentUser.email });
-      if (myProfiles[0]) {
-        await base44.entities.Profile.update(myProfiles[0].id, { following_count: Math.max((myProfiles[0].following_count || 0) - 1, 0) });
-      }
-      setIsFollowing(false);
-      queryClient.invalidateQueries({ queryKey: ["profile-data", profileEmail] });
-    } else {
-      await base44.entities.Follow.create({ follower_email: currentUser.email, following_email: profileEmail });
-      // Update counts
-      if (profileUser) {
-        await base44.entities.Profile.update(profileUser.id, { followers_count: (profileUser.followers_count || 0) + 1 });
-      }
-      const myProfiles = await base44.entities.Profile.filter({ email: currentUser.email });
-      if (myProfiles[0]) {
-        await base44.entities.Profile.update(myProfiles[0].id, { following_count: (myProfiles[0].following_count || 0) + 1 });
-      }
-      // Send follow notification
-      await base44.entities.Notification.create({
-        user_email: profileEmail,
-        type: "follow",
-        from_email: currentUser.email,
-        from_name: currentUser.full_name,
-        message: "started following you",
-        is_read: false,
+      const follows = await api.entities.Follow.filter({
+        follower_email: currentUser.email,
+        following_email: profileEmail,
       });
+      if (follows[0]) await api.entities.Follow.delete(follows[0].id);
+      setIsFollowing(false);
+    } else {
+      await api.entities.Follow.create({ following_email: profileEmail });
       setIsFollowing(true);
-      queryClient.invalidateQueries({ queryKey: ["profile-data", profileEmail] });
     }
+    queryClient.invalidateQueries({ queryKey: ["profile-data", profileEmail] });
   };
 
   const isOwnProfile = currentUser?.email === profileEmail;

@@ -1,9 +1,10 @@
 import React from "react";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { createPageUrl } from "@/utils";
 import { LogIn, MessageSquare, Shield, BarChart3 } from "lucide-react";
 
 export default function SignInPrompt() {
+  const { navigateToLogin } = useAuth();
   return (
     <div className="convs-card p-6 sm:p-8 text-center mb-6">
       <div className="w-14 h-14 rounded-2xl bg-[var(--convs-accent-light)] flex items-center justify-center mx-auto mb-4">
@@ -18,7 +19,7 @@ export default function SignInPrompt() {
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
         <button
-          onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
+          onClick={() => navigateToLogin(createPageUrl("Home"))}
           className="inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all"
           style={{ background: "#6366F1", color: "#FFFFFF" }}
         >
@@ -26,7 +27,7 @@ export default function SignInPrompt() {
           <LogIn className="ml-2 w-4 h-4" />
         </button>
         <button
-          onClick={() => base44.auth.redirectToLogin(createPageUrl("Home"))}
+          onClick={() => navigateToLogin(createPageUrl("Home"))}
           className="inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold rounded-xl border transition-all"
           style={{ borderColor: "var(--convs-border)", color: "var(--convs-text)" }}
         >
