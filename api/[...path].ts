@@ -1,15 +1,12 @@
-// Single Vercel Function that hosts the whole API. Using `hono/vercel` keeps
-// cold starts low and function count at 1. Verify against current Hono docs
-// when upgrading.
+// Single Vercel Function hosting the whole API. `hono/vercel`'s `handle`
+// returns a Web-standard (Request → Response) handler that Vercel invokes for
+// every /api/* path. Named GET/POST/… exports are Next.js App-Router shape;
+// on a plain-Vite Vercel project we default-export a single handler and let
+// Hono do the method routing.
 
 import { handle } from "hono/vercel";
 import { app } from "../server/router.js";
 
-export const config = { runtime: "nodejs" } as const;
+export const runtime = "nodejs";
 
-export const GET = handle(app);
-export const POST = handle(app);
-export const PATCH = handle(app);
-export const DELETE = handle(app);
-export const PUT = handle(app);
-export const OPTIONS = handle(app);
+export default handle(app);
