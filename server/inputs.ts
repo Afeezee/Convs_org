@@ -34,34 +34,34 @@ const convCreate = convBase.superRefine((v, ctx) => {
   }
 });
 
-const commentCreate = z
-  .object({
-    conv_id: z.string().uuid(),
-    parent_comment_id: z.string().uuid().optional().nullable(),
-    stance: z.enum(["support", "oppose", "clarification"]),
-    content: z.string().min(1).max(2000),
-    highlighted_text: z.string().max(2000).optional().nullable(),
-    flaw_tag: z.string().optional().nullable(),
-    strength_tag: z.string().optional().nullable(),
-    evidence_url: url,
-    citation: z.string().max(500).optional().nullable(),
-  })
-  .superRefine((v, ctx) => {
-    if (v.stance === "oppose" && v.flaw_tag && !FLAWS_SET.has(v.flaw_tag)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "flaw_tag not in the allowed list",
-        path: ["flaw_tag"],
-      });
-    }
-    if (v.stance === "support" && v.strength_tag && !STRENGTHS_SET.has(v.strength_tag)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "strength_tag not in the allowed list",
-        path: ["strength_tag"],
-      });
-    }
-  });
+const commentBase = z.object({
+  conv_id: z.string().uuid(),
+  parent_comment_id: z.string().uuid().optional().nullable(),
+  stance: z.enum(["support", "oppose", "clarification"]),
+  content: z.string().min(1).max(2000),
+  highlighted_text: z.string().max(2000).optional().nullable(),
+  flaw_tag: z.string().optional().nullable(),
+  strength_tag: z.string().optional().nullable(),
+  evidence_url: url,
+  citation: z.string().max(500).optional().nullable(),
+});
+
+const commentCreate = commentBase.superRefine((v, ctx) => {
+  if (v.stance === "oppose" && v.flaw_tag && !FLAWS_SET.has(v.flaw_tag)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "flaw_tag not in the allowed list",
+      path: ["flaw_tag"],
+    });
+  }
+  if (v.stance === "support" && v.strength_tag && !STRENGTHS_SET.has(v.strength_tag)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "strength_tag not in the allowed list",
+      path: ["strength_tag"],
+    });
+  }
+});
 
 const messageCreate = z.object({
   conversation_id: z.string().min(1).max(500),
@@ -146,7 +146,7 @@ export type EntityInputSchemas = Partial<
 
 export const inputs: EntityInputSchemas = {
   Conv: { create: convCreate, update: convBase.partial() },
-  Comment: { create: commentCreate, update: commentCreate.partial() },
+  Comment: { create: commentCreate, update: commentBase.partial() },
   Message: { create: messageCreate },
   Follow: { create: followCreate },
   Bookmark: { create: bookmarkCreate },
