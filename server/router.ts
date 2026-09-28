@@ -199,6 +199,24 @@ app.post("/entities/:entity", async (c) => {
     }
   }
 
+  // Opportunistic queue drain: on every content write, nibble a couple of
+  // queued moderation rows in the background. Keeps queued content moving
+  // between the once-a-day Vercel cron ticks without adding user latency.
+  if (entity === "Conv" || entity === "Comment" || entity === "Message") {
+    const task = (async () => {
+      try {
+        const { drainModerationQueue } = await import("./moderation");
+        await drainModerationQueue(2);
+      } catch {
+        // Best-effort — never fail the user's write because a drain hiccupped.
+      }
+    })();
+    const ctx = (c as unknown as { executionCtx?: { waitUntil?: (p: Promise<unknown>) => void } }).executionCtx;
+    if (ctx?.waitUntil) ctx.waitUntil(task);
+    // No waitUntil available (local dev) — fire-and-forget; the Node runtime
+    // keeps it alive long enough for a 2-row drain.
+  }
+
   return c.json(toRecord(row), 201);
 });
 

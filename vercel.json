@@ -18,6 +18,6 @@
     }
   ],
   "crons": [
-    { "path": "/api/cron/moderation-retry", "schedule": "*/5 * * * *" }
+    { "path": "/api/cron/moderation-retry", "schedule": "0 3 * * *" }
   ]
 }
